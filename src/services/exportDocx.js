@@ -7,17 +7,13 @@ const svgToPngBlob = (svgUrl) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
-      // Força uma resolução nativa altíssima no momento da "foto" do canvas pra não ficar embaçado
       const scale = 5;
-      // Garante que se o SVG não tiver dimensionamento base, ele assume um padrão visual retangular
       const baseW = img.width || 120;
       const baseH = img.height || 35;
-      
       const canvas = document.createElement('canvas');
       canvas.width = baseW * scale;
       canvas.height = baseH * scale;
       const ctx = canvas.getContext('2d');
-      
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(resolve, 'image/png', 1.0);
     };
@@ -26,22 +22,32 @@ const svgToPngBlob = (svgUrl) => {
   });
 };
 
+const parseRichText = (text, options = {}) => {
+  if (!text) return [new TextRun({ text: "", ...options })];
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map(part => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return new TextRun({ text: part.slice(2, -2), bold: true, ...options });
+    }
+    return new TextRun({ text: part, ...options });
+  });
+};
+
 export const generateDOCX = async (reportData) => {
   const children = [];
 
-  // Logo (Converted to PNG to avoid Word corruption)
+  // Logo
   try {
     const pngBlob = await svgToPngBlob(intelbrasLogo);
     const logoBuffer = await pngBlob.arrayBuffer();
     children.push(new Paragraph({
       alignment: AlignmentType.RIGHT,
-      // Aumentado drasticamente o tamanho de renderização dentro do Papel A4 do Docx
       children: [new ImageRun({ data: logoBuffer, transformation: { width: 220, height: 45 } })],
       spacing: { after: 400 }
     }));
-  } catch (e) { console.warn('Erro ao converter logo SVG para PNG:', e); }
+  } catch (e) { console.warn('Erro ao converter logo SVG:', e); }
 
-  // Title & Header Info
+  // Header Info
   children.push(
     new Paragraph({
       children: [new TextRun({ text: (reportData.title || '[TÍTULO DO RELATÓRIO]').toUpperCase(), bold: true, size: 36, font: "Calibri" })],
@@ -69,21 +75,15 @@ export const generateDOCX = async (reportData) => {
   );
 
   const multiLineText = (text, isCode = false) => {
+    if (!text) return [];
     const lines = text.split('\n');
     return lines.map((line, idx) => new Paragraph({
-      children: [new TextRun({ 
-        text: line, 
-        size: isCode ? 20 : 24, 
-        font: isCode ? "Courier New" : "Calibri",
-        color: isCode ? "333333" : "000000"
-      })],
+      children: isCode 
+        ? [new TextRun({ text: line, size: 20, font: "Courier New", color: "333333" })]
+        : parseRichText(line, { size: 24, font: "Calibri", color: "000000" }),
       spacing: { after: isCode ? 0 : 100 },
       ...(isCode && {
-          shading: {
-              type: ShadingType.SOLID,
-              color: "F3F4F6",
-              fill: "F3F4F6",
-          },
+          shading: { type: ShadingType.SOLID, color: "F3F4F6", fill: "F3F4F6" },
           indent: { left: 400, right: 400 },
           keepNext: idx < lines.length - 1,
           keepLines: true
@@ -97,10 +97,8 @@ export const generateDOCX = async (reportData) => {
     border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "D1D5DB", space: 6 } }
   });
 
-  // Sections
   children.push(createSectionHeader("1. INTRODUÇÃO"));
   children.push(...multiLineText(reportData.introduction));
-
   children.push(createSectionHeader("2. OBJETIVO"));
   children.push(...multiLineText(reportData.objectives));
 
@@ -164,31 +162,75 @@ export const generateDOCX = async (reportData) => {
       })
     );
 
-    children.push(new Paragraph({ 
-      children: [
-        new TextRun({ text: "Descrição: ", bold: true, size: 22, font: "Calibri" }), 
-        new TextRun({ text: test.description, size: 22, font: "Calibri" })
-      ],
-      spacing: { after: 150 }
-    }));
+    if (test.description) {
+      children.push(new Paragraph({ 
+        children: [
+          new TextRun({ text: "Descrição: ", bold: true, size: 22, font: "Calibri" }), 
+          ...parseRichText(test.description, { size: 22, font: "Calibri" })
+        ],
+        spacing: { after: 150 }
+      }));
+    }
 
-    children.push(new Paragraph({ 
-      children: [new TextRun({ text: "Passos:", bold: true, size: 22, font: "Calibri" })],
-      spacing: { after: 80 }
-    }));
-    children.push(...multiLineText(test.steps));
+    if (test.blocks && test.blocks.length > 0) {
+      for (const block of test.blocks) {
+        if (!block.content && block.type !== 'image' && block.type !== 'list') continue;
 
-    if (test.codeBlocks && test.codeBlocks.length > 0) {
-      test.codeBlocks.forEach(block => {
-        if (block.description) {
+        if (block.type === 'subtopic') {
           children.push(new Paragraph({ 
-            children: [new TextRun({ text: block.description.toUpperCase(), bold: true, size: 16, font: "Calibri", color: "6B7280" })],
-            spacing: { before: 200, after: 50 },
-            keepNext: true
+            children: parseRichText(block.content.toUpperCase(), { bold: true, size: 20, font: "Calibri", color: "1F2937" }),
+            spacing: { before: 300, after: 100 },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "F3F4F6", space: 1 } }
           }));
         }
-        children.push(...multiLineText(block.content, true));
-      });
+
+        if (block.type === 'step') {
+          children.push(...multiLineText(block.content));
+        }
+
+        if (block.type === 'list' && block.items) {
+          block.items.filter(i => i.text.trim()).forEach((item) => {
+            children.push(new Paragraph({
+              children: parseRichText(item.text, { size: 22, font: "Calibri" }),
+              bullet: block.listType === 'bullet' ? { level: 0 } : undefined,
+              numbering: block.listType === 'number' ? { reference: 'main-numbering', level: 0 } : undefined,
+              spacing: { after: 100 },
+              indent: { left: 720, hanging: 360 }
+            }));
+          });
+        }
+
+        if (block.type === 'code') {
+          if (block.description) {
+            children.push(new Paragraph({ 
+              children: parseRichText(`↳ ${block.description.toUpperCase()}`, { bold: true, size: 16, font: "Calibri", color: "6B7280" }),
+              spacing: { before: 100, after: 50 },
+              keepNext: true
+            }));
+          }
+          children.push(...multiLineText(block.content, true));
+        }
+
+        if (block.type === 'image' && block.content) {
+          try {
+            const imgResponse = await fetch(block.content);
+            const imgBlob = await imgResponse.blob();
+            const imgBuffer = await imgBlob.arrayBuffer();
+            children.push(new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [new ImageRun({ data: imgBuffer, transformation: { width: 450, height: 280 } })],
+              spacing: { before: 200, after: 100 }
+            }));
+            if (block.description) {
+              children.push(new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: parseRichText(`FIG. ${block.description}`, { italic: true, size: 18, font: "Calibri", color: "6B7280" }),
+                spacing: { after: 200 }
+              }));
+            }
+          } catch (e) { console.error("Erro no DOCX:", e); }
+        }
+      }
     }
 
     children.push(
@@ -203,11 +245,11 @@ export const generateDOCX = async (reportData) => {
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: "ESPERADO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
-                    spacing: { before: 200, after: 50 }
+                    children: [new TextRun({ text: "RESULTADO ESPERADO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
+                    spacing: { before: 300, after: 50 }
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: test.expectedResult, size: 22, font: "Calibri" })],
+                    children: parseRichText(test.expectedResult || "N/A", { size: 22, font: "Calibri" }),
                     spacing: { after: 200 }
                   })
                 ]
@@ -217,11 +259,11 @@ export const generateDOCX = async (reportData) => {
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: "OBTIDO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
-                    spacing: { before: 200, after: 50 }
+                    children: [new TextRun({ text: "RESULTADO OBTIDO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
+                    spacing: { before: 300, after: 50 }
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: test.actualResult || "Conforme esperado.", size: 22, font: "Calibri" })],
+                    children: parseRichText(test.actualResult || (test.status === 'Pass' ? 'Conforme esperado.' : 'Falha na execução.'), { size: 22, font: "Calibri", color: test.status === 'Pass' ? '16A34A' : 'DC2626' }),
                     spacing: { after: 200 }
                   })
                 ]
@@ -231,62 +273,24 @@ export const generateDOCX = async (reportData) => {
         ]
       })
     );
-
-    if (test.evidences && test.evidences.length > 0) {
-      children.push(new Paragraph({ 
-        children: [new TextRun({ text: "EVIDÊNCIAS TÉCNICAS", bold: true, size: 20, font: "Calibri", color: "9CA3AF" })],
-        spacing: { before: 200, after: 100 },
-        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "E5E7EB", space: 2 } }
-      }));
-
-      for (const evidence of test.evidences) {
-        try {
-          const response = await fetch(evidence.url);
-          const eBlob = await response.blob();
-          const eBuffer = await eBlob.arrayBuffer();
-          children.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new ImageRun({ data: eBuffer, transformation: { width: 450, height: 300 } })],
-            spacing: { before: 200 }
-          }));
-          if (evidence.description) {
-            children.push(new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: evidence.description, italic: true, size: 20, font: "Calibri", color: "6B7280" })],
-              spacing: { before: 50, after: 200 }
-            }));
-          }
-        } catch (e) { console.error(e); }
-      }
-    }
   }
 
   let footerConfig = undefined;
-
-  // Footer Logo (Native Word Footer)
   try {
     const respF = await fetch(footerImage);
     const blobF = await respF.blob();
     const bufferF = await blobF.arrayBuffer();
-    
     const footerContent = new Paragraph({
       alignment: AlignmentType.CENTER,
-      // Indent negativo absoluto para ignorar laterais e chegar no fim da folha
       indent: { left: -750, right: -750 },
       children: [new ImageRun({ data: bufferF, transformation: { width: 800, height: 60 } })]
     });
-
-    footerConfig = {
-      default: new Footer({ children: [footerContent] }),
-      first: new Footer({ children: [footerContent] })
-    };
-  } catch (e) { console.warn('Erro ao montar Footer nativo:', e); }
+    footerConfig = { default: new Footer({ children: [footerContent] }) };
+  } catch (e) { console.warn('Erro Footer:', e); }
 
   let headerConfig = undefined;
-
-  // Watermark "CONFIDENCIAL" (Native Word Header with Floating Image Background)
   try {
-    const wmSvgString = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="140" font-family="Calibri, sans-serif" font-weight="bold" fill="#000000" opacity="0.04" transform="rotate(-45 400 550)">CONFIDENCIAL</text></svg>';
+    const wmSvgString = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="100" font-family="Calibri, sans-serif" font-weight="bold" fill="#000000" opacity="0.04" transform="rotate(-45 400 550)">CONFIDENCIAL</text></svg>';
     const wmSvgUrl = 'data:image/svg+xml;base64,' + btoa(wmSvgString);
     const wmBlob = await svgToPngBlob(wmSvgUrl);
     const wmBuffer = await wmBlob.arrayBuffer();
@@ -297,46 +301,33 @@ export const generateDOCX = async (reportData) => {
           data: wmBuffer,
           transformation: { width: 800, height: 1100 },
           floating: {
-            horizontalPosition: {
-              relative: HorizontalPositionRelativeFrom.PAGE,
-              align: HorizontalPositionAlign.CENTER,
-            },
-            verticalPosition: {
-              relative: VerticalPositionRelativeFrom.PAGE,
-              align: VerticalPositionAlign.CENTER,
-            },
-            wrap: {
-              type: TextWrappingType.NONE,
-            },
+            horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, align: HorizontalPositionAlign.CENTER },
+            verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, align: VerticalPositionAlign.CENTER },
+            wrap: { type: TextWrappingType.NONE },
             behindDocument: true,
           }
         })
       ]
     });
+    headerConfig = { default: new Header({ children: [headerContent] }) };
+  } catch (e) { console.warn('Erro Watermark:', e); }
 
-    headerConfig = {
-      default: new Header({ children: [headerContent] }),
-      first: new Header({ children: [headerContent] })
-    };
-  } catch (e) { console.warn('Erro ao montar Watermark:', e); }
-
-  // Set tight margins to allow full edge-to-edge images and A4 sizing
   const doc = new Document({ 
+    numbering: {
+        config: [
+            {
+                reference: "main-numbering",
+                levels: [{ level: 0, format: "decimal", text: "%1.", alignment: AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }]
+            }
+        ]
+    },
     sections: [{ 
       properties: { 
         titlePage: true,
-        page: {
-            margin: {
-                top: 700,
-                right: 700,
-                bottom: 1100, // Limite seguro para o texto principal não invadir a imagem do rodapé
-                left: 700,
-                footer: 0,
-            },
-        },
+        page: { margin: { top: 700, right: 700, bottom: 1100, left: 700, footer: 0 } },
       },
       headers: headerConfig || {},
-      ...(footerConfig ? { footers: footerConfig } : {}),
+      footers: footerConfig || {},
       children 
     }] 
   });
@@ -345,7 +336,6 @@ export const generateDOCX = async (reportData) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  const fileName = (reportData.title || 'relatorio').replace(/\s+/g, '_');
-  a.download = `${fileName}.docx`;
+  a.download = `${(reportData.title || 'relatorio').replace(/\s+/g, '_')}.docx`;
   a.click();
 };

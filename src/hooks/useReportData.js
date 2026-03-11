@@ -45,12 +45,10 @@ export const useReportData = () => {
           id: Date.now(),
           scenario: '',
           description: '',
-          steps: '',
-          codeBlocks: [],
+          status: 'Pass',
           expectedResult: '',
           actualResult: '',
-          status: 'Pass',
-          evidences: []
+          blocks: []
         }
       ]
     }));
@@ -75,7 +73,7 @@ export const useReportData = () => {
           description: ''
         };
         const currentTest = reportData.tests.find(t => t.id === testId);
-        handleTestChange(testId, 'evidences', [...currentTest.evidences, newEvidence]);
+        handleTestChange(testId, 'evidences', [...(currentTest.evidences || []), newEvidence]);
       };
       reader.readAsDataURL(file);
     }
@@ -94,24 +92,84 @@ export const useReportData = () => {
     ));
   };
 
-  const addCodeBlock = (testId) => {
+  // Block System Handlers
+  const addBlock = (testId, type) => {
+    const newBlock = {
+      id: Date.now(),
+      type: type, // 'step', 'subtopic', 'code', 'image', 'list'
+      content: '',
+      description: '',
+      listType: 'bullet', // 'bullet' or 'number'
+      items: type === 'list' ? [{ id: Date.now(), text: '' }] : []
+    };
     const currentTest = reportData.tests.find(t => t.id === testId);
-    handleTestChange(testId, 'codeBlocks', [
-      ...currentTest.codeBlocks,
-      { id: Date.now(), description: '', content: '' }
-    ]);
+    handleTestChange(testId, 'blocks', [...(currentTest.blocks || []), newBlock]);
   };
 
-  const removeCodeBlock = (testId, blockId) => {
+  const removeBlock = (testId, blockId) => {
     const currentTest = reportData.tests.find(t => t.id === testId);
-    handleTestChange(testId, 'codeBlocks', currentTest.codeBlocks.filter(b => b.id !== blockId));
+    handleTestChange(testId, 'blocks', currentTest.blocks.filter(b => b.id !== blockId));
   };
 
-  const handleCodeBlockChange = (testId, blockId, field, value) => {
+  const handleBlockChange = (testId, blockId, field, value) => {
     const currentTest = reportData.tests.find(t => t.id === testId);
-    handleTestChange(testId, 'codeBlocks', currentTest.codeBlocks.map(b => 
+    handleTestChange(testId, 'blocks', currentTest.blocks.map(b => 
       b.id === blockId ? { ...b, [field]: value } : b
     ));
+  };
+
+  const handleBlockImageUpload = (testId, blockId, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleBlockChange(testId, blockId, 'content', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const addListItem = (testId, blockId) => {
+    const currentTest = reportData.tests.find(t => t.id === testId);
+    handleTestChange(testId, 'blocks', currentTest.blocks.map(b => {
+      if (b.id === blockId) {
+        return { ...b, items: [...b.items, { id: Date.now(), text: '' }] };
+      }
+      return b;
+    }));
+  };
+
+  const removeListItem = (testId, blockId, itemId) => {
+    const currentTest = reportData.tests.find(t => t.id === testId);
+    handleTestChange(testId, 'blocks', currentTest.blocks.map(b => {
+      if (b.id === blockId) {
+        return { ...b, items: b.items.filter(i => i.id !== itemId) };
+      }
+      return b;
+    }));
+  };
+
+  const handleListItemChange = (testId, blockId, itemId, text) => {
+    const currentTest = reportData.tests.find(t => t.id === testId);
+    handleTestChange(testId, 'blocks', currentTest.blocks.map(b => {
+      if (b.id === blockId) {
+        return { ...b, items: b.items.map(i => i.id === itemId ? { ...i, text } : i) };
+      }
+      return b;
+    }));
+  };
+
+  const moveBlock = (testId, blockId, direction) => {
+    const currentTest = reportData.tests.find(t => t.id === testId);
+    const blocks = [...currentTest.blocks];
+    const index = blocks.findIndex(b => b.id === blockId);
+    if (direction === 'up' && index > 0) {
+      [blocks[index], blocks[index - 1]] = [blocks[index - 1], blocks[index]];
+    } else if (direction === 'down' && index < blocks.length - 1) {
+      [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
+    }
+    handleTestChange(testId, 'blocks', blocks);
   };
 
   return {
@@ -126,8 +184,13 @@ export const useReportData = () => {
     handleImageUpload,
     removeEvidence,
     updateEvidenceDescription,
-    addCodeBlock,
-    removeCodeBlock,
-    handleCodeBlockChange
+    addBlock,
+    removeBlock,
+    handleBlockChange,
+    handleBlockImageUpload,
+    addListItem,
+    removeListItem,
+    handleListItemChange,
+    moveBlock
   };
 };
