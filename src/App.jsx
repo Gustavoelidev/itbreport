@@ -41,41 +41,63 @@ const App = () => {
       try {
         const newData = { ...reportData };
         
-        // Traduz campos básicos
-        newData.title = await translateText(newData.title, from, to);
-        newData.introduction = await translateText(newData.introduction, from, to);
-        newData.objectives = await translateText(newData.objectives, from, to);
-        newData.prerequisites = await translateText(newData.prerequisites, from, to);
+        // Traduz campos básicos (em paralelo)
+        const [title, intro, obj, pre] = await Promise.all([
+          translateText(newData.title, from, to),
+          translateText(newData.introduction, from, to),
+          translateText(newData.objectives, from, to),
+          translateText(newData.prerequisites, from, to)
+        ]);
+
+        newData.title = title;
+        newData.introduction = intro;
+        newData.objectives = obj;
+        newData.prerequisites = pre;
 
         // Traduz testes
-        newData.tests = await Promise.all(newData.tests.map(async (test) => ({
-          ...test,
-          scenario: await translateText(test.scenario, from, to),
-          description: await translateText(test.description, from, to),
-          expectedResult: await translateText(test.expectedResult, from, to),
-          actualResult: await translateText(test.actualResult, from, to),
-          blocks: await Promise.all(test.blocks.map(async (block) => {
-             const newBlock = { ...block };
-             if (block.type !== 'image' && block.type !== 'code') {
-               newBlock.content = await translateText(block.content, from, to);
-             }
-             if (block.description) {
-               newBlock.description = await translateText(block.description, from, to);
-             }
-             if (block.type === 'list') {
-               newBlock.items = await Promise.all(block.items.map(async (item) => ({
-                 ...item,
-                 text: await translateText(item.text, from, to)
-               })));
-             }
-             return newBlock;
-          }))
-        })));
+        if (newData.tests && newData.tests.length > 0) {
+          newData.tests = await Promise.all(newData.tests.map(async (test) => {
+            const translatedTest = { 
+              ...test,
+              scenario: await translateText(test.scenario, from, to),
+              description: await translateText(test.description, from, to),
+              expectedResult: await translateText(test.expectedResult, from, to),
+              actualResult: await translateText(test.actualResult, from, to)
+            };
+
+            if (test.blocks && test.blocks.length > 0) {
+              translatedTest.blocks = await Promise.all(test.blocks.map(async (block) => {
+                const newBlock = { ...block };
+                
+                // Traduz o conteúdo principal do bloco
+                if (block.type !== 'image' && block.type !== 'code' && block.content) {
+                  newBlock.content = await translateText(block.content, from, to);
+                }
+                
+                // Traduz descrição/legenda se houver
+                if (block.description) {
+                  newBlock.description = await translateText(block.description, from, to);
+                }
+                
+                // Traduz itens de lista
+                if (block.type === 'list' && block.items) {
+                  newBlock.items = await Promise.all(block.items.map(async (item) => ({
+                    ...item,
+                    text: await translateText(item.text, from, to)
+                  })));
+                }
+                
+                return newBlock;
+              }));
+            }
+            return translatedTest;
+          }));
+        }
 
         setReportData(newData);
-        setLang(to); // Muda o idioma da UI também
+        setLang(to); // Sincroniza o idioma da interface
       } catch (err) {
-        console.error(err);
+        console.error("Erro durante a tradução do relatório:", err);
       } finally {
         setIsTranslating(false);
       }
