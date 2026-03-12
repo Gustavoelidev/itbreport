@@ -138,8 +138,8 @@ const App = () => {
           </div>
         </div>
 
-        <main className="flex-1 bg-gray-200 overflow-y-auto p-12 flex flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out">
-          <div className="w-full flex justify-center">
+        <main className="flex-1 bg-slate-300 overflow-y-auto p-12 flex flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out">
+          <div className="w-full flex flex-col items-center pdf-pages-container">
             <DocumentPreview ref={previewRef} reportData={reportData} lang={lang} t={t} />
           </div>
         </main>

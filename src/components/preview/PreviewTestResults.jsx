@@ -15,7 +15,7 @@ const PreviewTestResults = ({ tests, t }) => {
   };
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-8 pt-4">
       {tests.map((test, index) => (
         <div key={test.id} className="space-y-6 pb-8">
           {/* Header do Cenário */}
