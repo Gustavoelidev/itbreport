@@ -7,16 +7,80 @@ import { useReportData } from './hooks/useReportData';
 import { generatePDF } from './services/exportPdf';
 import { generateDOCX } from './services/exportDocx';
 import { translations } from './constants/translations';
+import { templates } from './constants/templates';
+import { translateText } from './services/translationService';
 
 const App = () => {
   const previewRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lang, setLang] = useState('pt');
   
   const reportStateUtils = useReportData();
-  const { reportData } = reportStateUtils;
+  const { reportData, setReportData } = reportStateUtils;
   const t = translations[lang];
+
+  const handleApplyTemplate = (templateId) => {
+    const template = templates.find(temp => temp.id === templateId);
+    if (template && window.confirm(t.templates.confirmChange)) {
+      setReportData(prev => ({
+        ...prev,
+        ...template.state,
+        date: prev.date // Mantém a data atual
+      }));
+    }
+  };
+
+  const handleAutoTranslateReport = async () => {
+    if (window.confirm(t.translations.confirmTranslate)) {
+      setIsTranslating(true);
+      const from = lang === 'pt' ? 'pt' : 'en';
+      const to = lang === 'pt' ? 'en' : 'pt';
+
+      try {
+        const newData = { ...reportData };
+        
+        // Traduz campos básicos
+        newData.title = await translateText(newData.title, from, to);
+        newData.introduction = await translateText(newData.introduction, from, to);
+        newData.objectives = await translateText(newData.objectives, from, to);
+        newData.prerequisites = await translateText(newData.prerequisites, from, to);
+
+        // Traduz testes
+        newData.tests = await Promise.all(newData.tests.map(async (test) => ({
+          ...test,
+          scenario: await translateText(test.scenario, from, to),
+          description: await translateText(test.description, from, to),
+          expectedResult: await translateText(test.expectedResult, from, to),
+          actualResult: await translateText(test.actualResult, from, to),
+          blocks: await Promise.all(test.blocks.map(async (block) => {
+             const newBlock = { ...block };
+             if (block.type !== 'image' && block.type !== 'code') {
+               newBlock.content = await translateText(block.content, from, to);
+             }
+             if (block.description) {
+               newBlock.description = await translateText(block.description, from, to);
+             }
+             if (block.type === 'list') {
+               newBlock.items = await Promise.all(block.items.map(async (item) => ({
+                 ...item,
+                 text: await translateText(item.text, from, to)
+               })));
+             }
+             return newBlock;
+          }))
+        })));
+
+        setReportData(newData);
+        setLang(to); // Muda o idioma da UI também
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+  };
 
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -26,7 +90,7 @@ const App = () => {
 
   const handleExportDOCX = async () => {
     setIsExporting(true);
-    await generateDOCX(reportData);
+    await generateDOCX(reportData, t);
     setIsExporting(false);
   };
 
@@ -40,6 +104,9 @@ const App = () => {
         lang={lang}
         setLang={setLang}
         t={t}
+        onApplyTemplate={handleApplyTemplate}
+        onAutoTranslate={handleAutoTranslateReport}
+        isTranslating={isTranslating}
       />
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -61,7 +128,11 @@ const App = () => {
         </main>
       </div>
 
-      {isExporting && <LoadingOverlay />}
+      {(isExporting || isTranslating) && (
+        <LoadingOverlay 
+          message={isTranslating ? t.translations.translating : undefined} 
+        />
+      )}
     </div>
   );
 };

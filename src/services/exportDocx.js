@@ -33,7 +33,7 @@ const parseRichText = (text, options = {}) => {
   });
 };
 
-export const generateDOCX = async (reportData) => {
+export const generateDOCX = async (reportData, t) => {
   const children = [];
 
   // Logo
@@ -50,18 +50,18 @@ export const generateDOCX = async (reportData) => {
   // Header Info
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: (reportData.title || '[TÍTULO DO RELATÓRIO]').toUpperCase(), bold: true, size: 36, font: "Calibri" })],
+      children: [new TextRun({ text: (reportData.title || t.identification.title.toUpperCase()).toUpperCase(), bold: true, size: 36, font: "Calibri" })],
       spacing: { after: 200 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: "000000", space: 10 } }
     }),
     new Paragraph({
       alignment: AlignmentType.RIGHT,
-      children: [new TextRun({ text: reportData.qaName || "NOME DO ANALISTA", bold: true, size: 28, font: "Calibri" })],
+      children: [new TextRun({ text: reportData.qaName || t.identification.qaName.toUpperCase(), bold: true, size: 28, font: "Calibri" })],
       spacing: { before: 200 }
     }),
     new Paragraph({
       alignment: AlignmentType.RIGHT,
-      children: [new TextRun({ text: reportData.role || "Cargo", size: 24, font: "Calibri" })]
+      children: [new TextRun({ text: reportData.role || t.identification.role, size: 24, font: "Calibri" })]
     }),
     new Paragraph({
       alignment: AlignmentType.RIGHT,
@@ -97,26 +97,26 @@ export const generateDOCX = async (reportData) => {
     border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "D1D5DB", space: 6 } }
   });
 
-  children.push(createSectionHeader("1. INTRODUÇÃO"));
+  children.push(createSectionHeader(t.preview.introduction));
   children.push(...multiLineText(reportData.introduction));
-  children.push(createSectionHeader("2. OBJETIVO"));
+  children.push(createSectionHeader(t.preview.objectives));
   children.push(...multiLineText(reportData.objectives));
 
-  children.push(createSectionHeader("3. INFRAESTRUTURA"));
+  children.push(createSectionHeader(t.preview.infrastructure));
   reportData.infrastructure.forEach(infra => {
     children.push(new Paragraph({ 
       children: [
         new TextRun({ text: `[${infra.type}] `, bold: true, font: "Calibri", size: 24 }),
-        new TextRun({ text: `${infra.model || 'Não especificado'} ${infra.type !== 'CLOUD' && infra.firmware ? `- Firmware: ${infra.firmware}` : ''}`, font: "Calibri", size: 24 })
+        new TextRun({ text: `${infra.model || 'N/A'} ${infra.type !== 'CLOUD' && infra.firmware ? `- Firmware: ${infra.firmware}` : ''}`, font: "Calibri", size: 24 })
       ],
       spacing: { after: 120 }
     }));
   });
 
-  children.push(createSectionHeader("4. CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)"));
+  children.push(createSectionHeader(t.preview.prerequisites));
   children.push(...multiLineText(reportData.prerequisites));
 
-  children.push(createSectionHeader("5. RESULTADOS DE TESTES"));
+  children.push(createSectionHeader(t.preview.testResults));
   
   const noBorder = {
     top: { style: BorderStyle.NONE, size: 0, color: "auto" },
@@ -140,7 +140,7 @@ export const generateDOCX = async (reportData) => {
                 width: { size: 70, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: `CENÁRIO ${index + 1}: ${(test.scenario || 'Teste sem título').toUpperCase()}`, bold: true, size: 24, font: "Calibri" })],
+                    children: [new TextRun({ text: `${t.testExecution.scenarioLabel.toUpperCase()} ${index + 1}: ${(test.scenario || '...').toUpperCase()}`, bold: true, size: 24, font: "Calibri" })],
                     spacing: { before: 300, after: 150 }
                   })
                 ]
@@ -151,7 +151,7 @@ export const generateDOCX = async (reportData) => {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.RIGHT,
-                    children: [new TextRun({ text: `[STATUS: ${test.status.toUpperCase()}]`, bold: true, size: 20, font: "Calibri", color: test.status === 'Pass' ? '16A34A' : 'DC2626' })],
+                    children: [new TextRun({ text: `[STATUS: ${test.status === 'Pass' ? t.testExecution.status.pass : t.testExecution.status.fail}]`, bold: true, size: 20, font: "Calibri", color: test.status === 'Pass' ? '16A34A' : 'DC2626' })],
                     spacing: { before: 300, after: 150 }
                   })
                 ]
@@ -165,7 +165,7 @@ export const generateDOCX = async (reportData) => {
     if (test.description) {
       children.push(new Paragraph({ 
         children: [
-          new TextRun({ text: "Descrição: ", bold: true, size: 22, font: "Calibri" }), 
+          new TextRun({ text: `${t.testExecution.objectiveLabel}: `, bold: true, size: 22, font: "Calibri" }), 
           ...parseRichText(test.description, { size: 22, font: "Calibri" })
         ],
         spacing: { after: 150 }
@@ -224,7 +224,7 @@ export const generateDOCX = async (reportData) => {
             if (block.description) {
               children.push(new Paragraph({
                 alignment: AlignmentType.CENTER,
-                children: parseRichText(`FIG. ${block.description}`, { italic: true, size: 18, font: "Calibri", color: "6B7280" }),
+                children: parseRichText(`${t.preview.fig} ${block.description}`, { italic: true, size: 18, font: "Calibri", color: "6B7280" }),
                 spacing: { after: 200 }
               }));
             }
@@ -245,7 +245,7 @@ export const generateDOCX = async (reportData) => {
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: "RESULTADO ESPERADO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
+                    children: [new TextRun({ text: t.preview.expected.toUpperCase(), bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
                     spacing: { before: 300, after: 50 }
                   }),
                   new Paragraph({
@@ -259,11 +259,11 @@ export const generateDOCX = async (reportData) => {
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: "RESULTADO OBTIDO", bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
+                    children: [new TextRun({ text: t.preview.actual.toUpperCase(), bold: true, size: 16, font: "Calibri", color: "9CA3AF" })],
                     spacing: { before: 300, after: 50 }
                   }),
                   new Paragraph({
-                    children: parseRichText(test.actualResult || (test.status === 'Pass' ? 'Conforme esperado.' : 'Falha na execução.'), { size: 22, font: "Calibri", color: test.status === 'Pass' ? '16A34A' : 'DC2626' }),
+                    children: parseRichText(test.actualResult || (test.status === 'Pass' ? 'OK' : 'FAIL'), { size: 22, font: "Calibri", color: test.status === 'Pass' ? '16A34A' : 'DC2626' }),
                     spacing: { after: 200 }
                   })
                 ]
@@ -290,7 +290,7 @@ export const generateDOCX = async (reportData) => {
 
   let headerConfig = undefined;
   try {
-    const wmSvgString = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="100" font-family="Calibri, sans-serif" font-weight="bold" fill="#000000" opacity="0.04" transform="rotate(-45 400 550)">CONFIDENCIAL</text></svg>';
+    const wmSvgString = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="100" font-family="Calibri, sans-serif" font-weight="bold" fill="#000000" opacity="0.04" transform="rotate(-45 400 550)">${t.preview.confidential}</text></svg>`;
     const wmSvgUrl = 'data:image/svg+xml;base64,' + btoa(wmSvgString);
     const wmBlob = await svgToPngBlob(wmSvgUrl);
     const wmBuffer = await wmBlob.arrayBuffer();

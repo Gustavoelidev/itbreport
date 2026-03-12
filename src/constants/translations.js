@@ -68,6 +68,16 @@ export const translations = {
       fig: "Fig.",
       expected: "Resultado Esperado",
       actual: "Resultado Obtido"
+    },
+    templates: {
+      title: "Templates",
+      select: "Selecionar Estilo",
+      confirmChange: "Alterar o template irá substituir os dados atuais. Deseja continuar?",
+    },
+    translations: {
+      autoTranslate: "Traduzir Todo Conteúdo",
+      confirmTranslate: "Deseja traduzir todo o conteúdo preenchido (Campos de texto e testes)? Isso pode levar alguns segundos.",
+      translating: "Traduzindo..."
     }
   },
   en: {
@@ -139,6 +149,16 @@ export const translations = {
       fig: "Fig.",
       expected: "Expected Result",
       actual: "Actual Result"
+    },
+    templates: {
+      title: "Templates",
+      select: "Select Style",
+      confirmChange: "Changing the template will replace the current data. Do you want to continue?",
+    },
+    translations: {
+      autoTranslate: "Translate All Content",
+      confirmTranslate: "Do you want to translate all filled content (Text fields and tests)? This may take a few seconds.",
+      translating: "Translating..."
     }
   }
 };
