@@ -41,48 +41,68 @@ const App = () => {
       const to = lang === 'pt' ? 'en' : 'pt';
 
       try {
-        // Criamos uma cópia profunda para não mutar o estado diretamente
+        console.log(`Iniciando tradução de ${from} para ${to}...`);
+        
+        // Cópia profunda para garantir reatividade total
         const newData = JSON.parse(JSON.stringify(reportData));
         
-        // Traduz campos básicos (Um por um para não sobrecarregar a API gratuita)
-        newData.title = await translateText(newData.title, from, to);
-        newData.introduction = await translateText(newData.introduction, from, to);
-        newData.objectives = await translateText(newData.objectives, from, to);
-        newData.prerequisites = await translateText(newData.prerequisites, from, to);
+        // Função auxiliar para tradução com pequeno delay (evita bloqueio da API)
+        const safeTranslate = async (txt) => {
+          if (!txt) return txt;
+          const res = await translateText(txt, from, to);
+          await new Promise(r => setTimeout(r, 100)); // Delay de 100ms entre chamadas
+          return res;
+        };
 
-        // Traduz testes de forma sequencial
-        for (let i = 0; i < newData.tests.length; i++) {
-          const test = newData.tests[i];
-          test.scenario = await translateText(test.scenario, from, to);
-          test.description = await translateText(test.description, from, to);
-          test.expectedResult = await translateText(test.expectedResult, from, to);
-          test.actualResult = await translateText(test.actualResult, from, to);
+        // 1. Campos Base
+        newData.title = await safeTranslate(newData.title);
+        newData.introduction = await safeTranslate(newData.introduction);
+        newData.objectives = await safeTranslate(newData.objectives);
+        newData.prerequisites = await safeTranslate(newData.prerequisites);
 
+        // 2. Infraestrutura (Modelos)
+        if (newData.infrastructure) {
+          for (let item of newData.infrastructure) {
+            if (item.model) item.model = await safeTranslate(item.model);
+          }
+        }
+
+        // 3. Cenários de Teste
+        for (let test of newData.tests) {
+          test.scenario = await safeTranslate(test.scenario);
+          test.description = await safeTranslate(test.description);
+          test.expectedResult = await safeTranslate(test.expectedResult);
+          test.actualResult = await safeTranslate(test.actualResult);
+
+          // 4. Blocos dentro do Teste
           if (test.blocks && test.blocks.length > 0) {
-            for (let j = 0; j < test.blocks.length; j++) {
-              const block = test.blocks[j];
-              
+            for (let block of test.blocks) {
+              // Traduz conteúdo se não for imagem ou código (que são técnicos)
               if (block.type !== 'image' && block.type !== 'code' && block.content) {
-                block.content = await translateText(block.content, from, to);
+                block.content = await safeTranslate(block.content);
               }
               
+              // Traduz descrições/legendas (presentes em imagens e códigos)
               if (block.description) {
-                block.description = await translateText(block.description, from, to);
+                block.description = await safeTranslate(block.description);
               }
               
+              // Traduz itens de lista
               if (block.type === 'list' && block.items) {
-                for (let k = 0; k < block.items.length; k++) {
-                  block.items[k].text = await translateText(block.items[k].text, from, to);
+                for (let item of block.items) {
+                  item.text = await safeTranslate(item.text);
                 }
               }
             }
           }
         }
 
+        console.log("Tradução concluída com sucesso!");
         setReportData(newData);
         setLang(to); 
       } catch (err) {
         console.error("Erro crítico na tradução:", err);
+        alert("Ocorreu um erro durante a tradução. Algum campo pode não ter sido processado.");
       } finally {
         setIsTranslating(false);
       }

@@ -1,37 +1,45 @@
 /**
  * Serviço de tradução utilizando a API MyMemory (gratuita)
- * Otimizado para estabilidade e compatibilidade.
  */
 
 export const translateText = async (text, from = 'pt', to = 'en') => {
-  if (!text || String(text).trim() === '' || String(text).length < 2) return text;
+  // Se for nulo, apenas espaço ou muito curto, não traduz para poupar API
+  if (!text || String(text).trim() === '') return text;
+  if (String(text).length < 2 && !/^[a-zA-Z0-9]$/.test(text)) return text;
   
-  // Limpeza básica para evitar poluir a tradução com tags markdown de negrito
-  const cleanText = String(text).replace(/\*\*/g, '');
+  const sourceLang = from === 'pt' ? 'pt-BR' : 'en-US';
+  const targetLang = to === 'pt' ? 'pt-BR' : 'en-US';
   
-  const query = encodeURIComponent(cleanText.trim());
-  const url = `https://api.mymemory.translated.net/get?q=${query}&langpair=${from}|${to}&de=qa_report_tool@intelbras.com.br`;
+  // MyMemory separa pares por barra vertical |
+  const langPair = `${from}|${to}`;
+  const query = encodeURIComponent(String(text).trim());
+  
+  // Usamos um e-mail fake de contato para aumentar levemente o limite da API gratuita
+  const url = `https://api.mymemory.translated.net/get?q=${query}&langpair=${langPair}&de=qa_reporting_tool_intelbras@gmail.com`;
 
   try {
+    console.log(`[Traduzindo] (${from} -> ${to}): "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`);
+    
     const response = await fetch(url);
+    if (!response.ok) throw new Error('Falha na rede');
+    
     const data = await response.json();
     
     if (data.responseData && data.responseData.translatedText) {
-      let result = data.responseData.translatedText;
+      const translated = data.responseData.translatedText;
       
-      // Se a MyMemory avisar de limite, retornamos o original sem erro
-      if (result.includes("MYMEMORY WARNING")) {
-        return text;
+      // Verifica se a API retornou um erro em forma de string (comum na MyMemory)
+      if (translated.includes("MYMEMORY WARNING")) {
+          console.warn("Limite da API MyMemory atingido ou erro no par de línguas.");
+          return text;
       }
-
-      // Se o texto original tinha negrito, tentamos sugerir ou apenas retornamos o limpo
-      // (Manter negrito em tradução dinâmica é complexo, priorisamos o texto)
-      return result;
+      
+      return translated;
     }
     
     return text;
   } catch (error) {
-    console.error('Falha na API de Tradução:', error);
+    console.error('Erro ao traduzir trecho:', error);
     return text;
   }
 };
