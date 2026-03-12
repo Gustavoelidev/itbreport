@@ -190,6 +190,7 @@ export const useReportData = () => {
     addListItem,
     removeListItem,
     handleListItemChange,
-    moveBlock
+    moveBlock,
+    setReportData
   };
 };
