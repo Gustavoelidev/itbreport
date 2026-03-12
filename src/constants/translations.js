@@ -40,8 +40,8 @@ export const translations = {
       expectedResult: "Resultado Esperado",
       actualResult: "Resultado Obtido",
       status: {
-        pass: "PASSED",
-        fail: "FAILED"
+        pass: "APROVADO",
+        fail: "REPROVADO"
       },
       blocks: {
         subtopic: "Tópico",
