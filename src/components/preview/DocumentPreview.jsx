@@ -13,7 +13,7 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       style={{ fontFamily: calibriStack, lineHeight: '1.4' }}
     >
       {/* Marca d'água */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
+      <div className="pdf-watermark-html absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
         <div className="text-[80px] font-black tracking-[10px] -rotate-45 whitespace-nowrap">{t.preview.confidential}</div>
       </div>
 

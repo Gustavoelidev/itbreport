@@ -8,25 +8,21 @@ export const generatePDF = async (element, title) => {
     return;
   }
   
-  console.log('--- INICIANDO EXPORTAÇÃO PDF ---');
+  console.log('--- INICIANDO EXPORTAÇÃO PDF PREMIUM ---');
   try {
     window.scrollTo(0, 0);
     
-    // Identifica o rodapé e remove restrições de altura temporariamente
+    // 1. Prepara o elemento: Esconde elementos que o jsPDF vai desenhar manualmente
     const footerDiv = element.querySelector('div.absolute.bottom-0');
-    if (footerDiv) footerDiv.style.display = 'none';
-
-    // Guardamos os estilos originais para restaurar depois
-    const originalMinHeight = element.style.minHeight;
-    const originalPaddingBottom = element.style.paddingBottom;
-
-    // Forçamos o elemento a ter apenas a altura do seu conteúdo real
-    element.style.setProperty('min-height', '0', 'important');
-    element.style.setProperty('padding-bottom', '0', 'important');
+    const watermarkDiv = element.querySelector('.pdf-watermark-html') || element.querySelector('div.absolute.inset-0.flex.items-center');
+    
+    if (footerDiv) footerDiv.style.opacity = '0';
+    if (watermarkDiv) watermarkDiv.style.opacity = '0';
 
     const width = element.offsetWidth;
     const height = element.offsetHeight;
     
+    // Captura o conteúdo real (sem marca dagua e rodape do HTML)
     const dataUrl = await toPng(element, { 
       quality: 1,
       pixelRatio: 2,
@@ -34,66 +30,62 @@ export const generatePDF = async (element, title) => {
       cacheBust: true,
       width: width,
       height: height,
-      style: {
-        shadow: 'none',
-        boxShadow: 'none',
-        margin: '0',
-        transform: 'none'
-      }
+      style: { shadow: 'none', boxShadow: 'none', margin: '0' }
     });
 
-    // Restaura o estado original para o usuário na web
-    if (footerDiv) footerDiv.style.display = 'block';
-    element.style.minHeight = originalMinHeight;
-    element.style.paddingBottom = originalPaddingBottom;
+    // Restaura o estado para o usuário ver no browser
+    if (footerDiv) footerDiv.style.opacity = '1';
+    if (watermarkDiv) watermarkDiv.style.opacity = '1';
     
-    console.log('Captura concluída. Montando PDF A4 com rodapé fixo...');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    
     const pdfWidth = 210;
     const pdfHeight = 297;
-    const footerHeightMm = 15; // Altura reservada para o rodapé no PDF
+    const footerHeightMm = 15; // Tarja Intelbras
+    const safeContentHeight = pdfHeight - footerHeightMm - 10; // Espaço útil real por página
 
-    // Cálculo proporcional do conteúdo
     let imgHeightMm = (height * pdfWidth) / width;
-    
-    // CLAMPING: Se a altura for levemente superior a uma página A4 (até 1cm de sobra),
-    // forçamos a escala para caber em uma única página, evitando folhas fantasma.
-    if (imgHeightMm > 297 && imgHeightMm < 307) {
-      imgHeightMm = 297;
-      console.log('Ajustando escala para caber em 1 página.');
-    }
-    
     let heightLeft = imgHeightMm;
     let position = 0;
     let pageNumber = 1;
 
-    // Função interna para adicionar o rodapé em uma página
-    const addFooterToPage = async (doc) => {
+    // Função para desenhar Marca d'água e Rodapé em cada nova página
+    const addTemplateElements = async (doc) => {
+      // 1. Marca d'água Centralizada (Texto Dinâmico)
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.04 }));
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(80);
+      doc.setTextColor(150, 150, 150);
+      doc.text("CONFIDENCIAL", pdfWidth / 2, pdfHeight / 2, {
+        align: "center",
+        angle: 45
+      });
+      doc.restoreGraphicsState();
+
+      // 2. Rodapé Intelbras (Tarja Verde)
       try {
         const respF = await fetch(footerImage);
         const blobF = await respF.blob();
         const bufferF = await blobF.arrayBuffer();
-        // Adiciona a tarja verde no rodapé (posicionada no final da folha A4)
         doc.addImage(new Uint8Array(bufferF), 'PNG', 0, pdfHeight - footerHeightMm, pdfWidth, footerHeightMm);
       } catch (e) {
-        console.warn('Erro ao carregar imagem do rodapé para o PDF:', e);
+        console.warn('Erro ao carregar rodapé:', e);
       }
     };
 
     // Primeira página
     pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeightMm, undefined, 'FAST');
-    await addFooterToPage(pdf);
+    await addTemplateElements(pdf);
     
-    heightLeft -= pdfHeight;
+    heightLeft -= safeContentHeight;
 
-    // Páginas subsequentes (Tolerância de 10mm para ignorar rodapés e margens vazias do navegador)
-    while (heightLeft > 10) {
-      position -= pdfHeight;
+    // Páginas subsequentes
+    while (heightLeft > 0) {
+      position -= safeContentHeight; // Move o "scroll" da imagem para a próxima parte
       pdf.addPage();
       pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeightMm, undefined, 'FAST');
-      await addFooterToPage(pdf);
-      heightLeft -= pdfHeight;
+      await addTemplateElements(pdf);
+      heightLeft -= safeContentHeight;
       pageNumber++;
     }
     
@@ -101,6 +93,6 @@ export const generatePDF = async (element, title) => {
     pdf.save(`${fileName}.pdf`);
     console.log(`--- EXPORTAÇÃO CONCLUÍDA (${pageNumber} página(s)) ---`);
   } catch (error) { 
-    console.error('ERRO FATAL:', error); 
+    console.error('ERRO FATAL NA EXPORTAÇÃO:', error); 
   }
 };
