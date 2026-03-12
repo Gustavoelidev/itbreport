@@ -55,7 +55,6 @@ export const useReportData = () => {
   };
 
   const removeTestCase = (id) => {
-    if (reportData.tests.length === 1) return;
     setReportData(prev => ({
       ...prev,
       tests: prev.tests.filter(t => t.id !== id)
