@@ -27,7 +27,7 @@ const App = () => {
       setReportData(prev => ({
         ...prev,
         ...template.state,
-        date: prev.date // Mantém a data atual
+        date: prev.date 
       }));
     }
   };
@@ -41,53 +41,42 @@ const App = () => {
       const to = lang === 'pt' ? 'en' : 'pt';
 
       try {
-        console.log(`Iniciando tradução de ${from} para ${to}...`);
-        
-        // Cópia profunda para garantir reatividade total
         const newData = JSON.parse(JSON.stringify(reportData));
         
-        // Função auxiliar para tradução com pequeno delay (evita bloqueio da API)
         const safeTranslate = async (txt) => {
-          if (!txt) return txt;
+          if (!txt || String(txt).trim() === '') return txt;
           const res = await translateText(txt, from, to);
-          await new Promise(r => setTimeout(r, 100)); // Delay de 100ms entre chamadas
+          if (res === "LIMIT_EXCEEDED") throw new Error("LIMIT_EXCEEDED");
+          await new Promise(r => setTimeout(r, 100)); 
           return res;
         };
 
-        // 1. Campos Base
+        // Processo sequencial com tratamento de limite
         newData.title = await safeTranslate(newData.title);
         newData.introduction = await safeTranslate(newData.introduction);
         newData.objectives = await safeTranslate(newData.objectives);
         newData.prerequisites = await safeTranslate(newData.prerequisites);
 
-        // 2. Infraestrutura (Modelos)
         if (newData.infrastructure) {
           for (let item of newData.infrastructure) {
             if (item.model) item.model = await safeTranslate(item.model);
           }
         }
 
-        // 3. Cenários de Teste
         for (let test of newData.tests) {
           test.scenario = await safeTranslate(test.scenario);
           test.description = await safeTranslate(test.description);
           test.expectedResult = await safeTranslate(test.expectedResult);
           test.actualResult = await safeTranslate(test.actualResult);
 
-          // 4. Blocos dentro do Teste
-          if (test.blocks && test.blocks.length > 0) {
+          if (test.blocks) {
             for (let block of test.blocks) {
-              // Traduz conteúdo se não for imagem ou código (que são técnicos)
               if (block.type !== 'image' && block.type !== 'code' && block.content) {
                 block.content = await safeTranslate(block.content);
               }
-              
-              // Traduz descrições/legendas (presentes em imagens e códigos)
               if (block.description) {
                 block.description = await safeTranslate(block.description);
               }
-              
-              // Traduz itens de lista
               if (block.type === 'list' && block.items) {
                 for (let item of block.items) {
                   item.text = await safeTranslate(item.text);
@@ -97,12 +86,15 @@ const App = () => {
           }
         }
 
-        console.log("Tradução concluída com sucesso!");
         setReportData(newData);
         setLang(to); 
       } catch (err) {
-        console.error("Erro crítico na tradução:", err);
-        alert("Ocorreu um erro durante a tradução. Algum campo pode não ter sido processado.");
+        if (err.message === "LIMIT_EXCEEDED") {
+          alert("Aviso: Limite diário de tradução gratuita atingido. O conteúdo restante permanecerá no idioma original.");
+        } else {
+          console.error("Erro na tradução:", err);
+          alert("Ocorreu um erro inesperado durante a tradução.");
+        }
       } finally {
         setIsTranslating(false);
       }
@@ -137,7 +129,6 @@ const App = () => {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar */}
         <div 
           className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden flex-shrink-0 z-10"
           style={{ width: sidebarOpen ? '420px' : '0' }}
@@ -147,7 +138,6 @@ const App = () => {
           </div>
         </div>
 
-        {/* Área Principal */}
         <main className="flex-1 bg-gray-200 overflow-y-auto p-12 flex flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out">
           <div className="w-full flex justify-center">
             <DocumentPreview ref={previewRef} reportData={reportData} lang={lang} t={t} />

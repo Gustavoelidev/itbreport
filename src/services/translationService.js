@@ -30,8 +30,8 @@ export const translateText = async (text, from = 'pt', to = 'en') => {
       
       // Verifica se a API retornou um erro em forma de string (comum na MyMemory)
       if (translated.includes("MYMEMORY WARNING")) {
-          console.warn("Limite da API MyMemory atingido ou erro no par de línguas.");
-          return text;
+          console.warn("Limite da API MyMemory atingido.");
+          return "LIMIT_EXCEEDED"; 
       }
       
       return translated;
