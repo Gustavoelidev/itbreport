@@ -1,44 +1,37 @@
 /**
  * Serviço de tradução utilizando a API MyMemory (gratuita)
- * Adicionado suporte robusto para idiomas e tratamento de erros.
+ * Otimizado para estabilidade e compatibilidade.
  */
 
 export const translateText = async (text, from = 'pt', to = 'en') => {
-  if (!text || text === undefined || String(text).trim() === '') return text;
+  if (!text || String(text).trim() === '' || String(text).length < 2) return text;
   
-  // Normalização de idiomas para a MyMemory
-  const sourceLang = from === 'pt' ? 'pt-BR' : 'en-US';
-  const targetLang = to === 'pt' ? 'pt-BR' : 'en-US';
+  // Limpeza básica para evitar poluir a tradução com tags markdown de negrito
+  const cleanText = String(text).replace(/\*\*/g, '');
   
-  const query = encodeURIComponent(String(text).trim());
-  const langPair = `${sourceLang}|${targetLang}`;
-  
-  // Adicionando um "de" (email fictício) para evitar limites mais rígidos da API gratuita
-  const url = `https://api.mymemory.translated.net/get?q=${query}&langpair=${langPair}&de=qa_report_tool@intelbras.com.br`;
+  const query = encodeURIComponent(cleanText.trim());
+  const url = `https://api.mymemory.translated.net/get?q=${query}&langpair=${from}|${to}&de=qa_report_tool@intelbras.com.br`;
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) throw new Error('Network response was not ok');
-    
+    const response = await fetch(url);
     const data = await response.json();
     
     if (data.responseData && data.responseData.translatedText) {
-      // MyMemory às vezes retorna o erro na string se o limite for excedido
-      const result = data.responseData.translatedText;
+      let result = data.responseData.translatedText;
+      
+      // Se a MyMemory avisar de limite, retornamos o original sem erro
       if (result.includes("MYMEMORY WARNING")) {
-        console.warn("MyMemory API Limit Reached");
         return text;
       }
+
+      // Se o texto original tinha negrito, tentamos sugerir ou apenas retornamos o limpo
+      // (Manter negrito em tradução dinâmica é complexo, priorisamos o texto)
       return result;
     }
     
     return text;
   } catch (error) {
-    console.error('Erro na tradução automática:', error);
+    console.error('Falha na API de Tradução:', error);
     return text;
   }
 };

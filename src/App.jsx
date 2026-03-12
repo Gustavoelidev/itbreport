@@ -33,71 +33,56 @@ const App = () => {
   };
 
   const handleAutoTranslateReport = async () => {
+    if (!reportData || !reportData.tests) return;
+    
     if (window.confirm(t.translations.confirmTranslate)) {
       setIsTranslating(true);
       const from = lang === 'pt' ? 'pt' : 'en';
       const to = lang === 'pt' ? 'en' : 'pt';
 
       try {
-        const newData = { ...reportData };
+        // Criamos uma cópia profunda para não mutar o estado diretamente
+        const newData = JSON.parse(JSON.stringify(reportData));
         
-        // Traduz campos básicos (em paralelo)
-        const [title, intro, obj, pre] = await Promise.all([
-          translateText(newData.title, from, to),
-          translateText(newData.introduction, from, to),
-          translateText(newData.objectives, from, to),
-          translateText(newData.prerequisites, from, to)
-        ]);
+        // Traduz campos básicos (Um por um para não sobrecarregar a API gratuita)
+        newData.title = await translateText(newData.title, from, to);
+        newData.introduction = await translateText(newData.introduction, from, to);
+        newData.objectives = await translateText(newData.objectives, from, to);
+        newData.prerequisites = await translateText(newData.prerequisites, from, to);
 
-        newData.title = title;
-        newData.introduction = intro;
-        newData.objectives = obj;
-        newData.prerequisites = pre;
+        // Traduz testes de forma sequencial
+        for (let i = 0; i < newData.tests.length; i++) {
+          const test = newData.tests[i];
+          test.scenario = await translateText(test.scenario, from, to);
+          test.description = await translateText(test.description, from, to);
+          test.expectedResult = await translateText(test.expectedResult, from, to);
+          test.actualResult = await translateText(test.actualResult, from, to);
 
-        // Traduz testes
-        if (newData.tests && newData.tests.length > 0) {
-          newData.tests = await Promise.all(newData.tests.map(async (test) => {
-            const translatedTest = { 
-              ...test,
-              scenario: await translateText(test.scenario, from, to),
-              description: await translateText(test.description, from, to),
-              expectedResult: await translateText(test.expectedResult, from, to),
-              actualResult: await translateText(test.actualResult, from, to)
-            };
-
-            if (test.blocks && test.blocks.length > 0) {
-              translatedTest.blocks = await Promise.all(test.blocks.map(async (block) => {
-                const newBlock = { ...block };
-                
-                // Traduz o conteúdo principal do bloco
-                if (block.type !== 'image' && block.type !== 'code' && block.content) {
-                  newBlock.content = await translateText(block.content, from, to);
+          if (test.blocks && test.blocks.length > 0) {
+            for (let j = 0; j < test.blocks.length; j++) {
+              const block = test.blocks[j];
+              
+              if (block.type !== 'image' && block.type !== 'code' && block.content) {
+                block.content = await translateText(block.content, from, to);
+              }
+              
+              if (block.description) {
+                block.description = await translateText(block.description, from, to);
+              }
+              
+              if (block.type === 'list' && block.items) {
+                for (let k = 0; k < block.items.length; k++) {
+                  block.items[k].text = await translateText(block.items[k].text, from, to);
                 }
-                
-                // Traduz descrição/legenda se houver
-                if (block.description) {
-                  newBlock.description = await translateText(block.description, from, to);
-                }
-                
-                // Traduz itens de lista
-                if (block.type === 'list' && block.items) {
-                  newBlock.items = await Promise.all(block.items.map(async (item) => ({
-                    ...item,
-                    text: await translateText(item.text, from, to)
-                  })));
-                }
-                
-                return newBlock;
-              }));
+              }
             }
-            return translatedTest;
-          }));
+          }
         }
 
         setReportData(newData);
-        setLang(to); // Sincroniza o idioma da interface
+        setLang(to); 
       } catch (err) {
-        console.error("Erro durante a tradução do relatório:", err);
+        console.error("Erro crítico na tradução:", err);
       } finally {
         setIsTranslating(false);
       }
