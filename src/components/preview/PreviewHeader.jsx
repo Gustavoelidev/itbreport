@@ -18,6 +18,7 @@ const PreviewHeader = ({ reportData, t }) => {
         <div className="text-right text-[12px] space-y-0.5">
           <p className="font-bold text-[14px]">{reportData.qaName || (t ? t.identification.qaName.toUpperCase() : 'NOME DO ANALISTA')}</p>
           <p>{reportData.role || (t ? t.identification.role : 'Cargo')}</p>
+          {reportData.department && <p className="text-gray-500 italic uppercase text-[10px]">{reportData.department}</p>}
           <p className="text-[#00a335] font-medium text-[10px]">{reportData.email}</p>
           <p className="text-gray-400 font-bold pt-4 uppercase text-[9px] tracking-widest inline-block">{reportData.date}</p>
         </div>

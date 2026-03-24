@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { defaultReportState } from '../constants/defaultReportState';
 
 export const useReportData = () => {
-  const [reportData, setReportData] = useState(defaultReportState);
+  const [reportData, setReportData] = useState(() => {
+    const saved = localStorage.getItem('qa_report_data');
+    return saved ? JSON.parse(saved) : defaultReportState;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('qa_report_data', JSON.stringify(reportData));
+  }, [reportData]);
 
   const handleInputChange = (e, field) => {
     setReportData(prev => ({ ...prev, [field]: e.target.value }));
@@ -190,6 +197,7 @@ export const useReportData = () => {
     addListItem,
     removeListItem,
     handleListItemChange,
-    moveBlock
+    moveBlock,
+    setReportData
   };
 };
