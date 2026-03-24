@@ -45,19 +45,8 @@ export const generatePDF = async (containerElement, title) => {
 
       // Adiciona a imagem da página cobrindo toda a folha A4
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-
-      // Marca d'água via código (Extra camada de segurança/qualidade)
-      pdf.saveGraphicsState();
-      pdf.setGState(new pdf.GState({ opacity: 0.04 }));
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(80);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text("CONFIDENCIAL", pdfWidth / 2, pdfHeight / 2, {
-        align: "center",
-        angle: 45
-      });
-      pdf.restoreGraphicsState();
     }
+
     
     const fileName = (title || 'relatorio').replace(/\s+/g, '_');
     pdf.save(`${fileName}.pdf`);

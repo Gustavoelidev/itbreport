@@ -102,6 +102,9 @@ export const generateDOCX = async (reportData, t) => {
   children.push(createSectionHeader(t.preview.objectives));
   children.push(...multiLineText(reportData.objectives));
 
+  children.push(createSectionHeader(t.preview.prerequisites));
+  children.push(...multiLineText(reportData.prerequisites));
+
   children.push(createSectionHeader(t.preview.infrastructure));
   reportData.infrastructure.forEach(infra => {
     children.push(new Paragraph({ 
@@ -112,9 +115,6 @@ export const generateDOCX = async (reportData, t) => {
       spacing: { after: 120 }
     }));
   });
-
-  children.push(createSectionHeader(t.preview.prerequisites));
-  children.push(...multiLineText(reportData.prerequisites));
 
   children.push(createSectionHeader(t.preview.testResults));
   

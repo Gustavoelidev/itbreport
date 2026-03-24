@@ -11,7 +11,8 @@ export const translations = {
       identification: "Identificação",
       baseContent: "Conteúdo Base",
       infrastructure: "Infraestrutura",
-      testExecution: "Execução de Testes"
+      testExecution: "Execução de Testes",
+      developedBy: "Desenvolvido por Gustavo Henrique Eli - Assistente de desenvolvimento de produtos"
     },
     identification: {
       title: "Título do Relatório",
@@ -23,7 +24,7 @@ export const translations = {
     baseContent: {
       introduction: "INTRODUÇÃO",
       objectives: "OBJETIVOS",
-      prerequisites: "PRÉ-REQUISITOS / AMBIENTE"
+      prerequisites: "Configuração de ambiente (pre requisitos)"
     },
     infrastructure: {
       type: "Tipo",
@@ -61,9 +62,9 @@ export const translations = {
     preview: {
       introduction: "1. INTRODUÇÃO",
       objectives: "2. OBJETIVO",
-      infrastructure: "3. INFRAESTRUTURA",
-      prerequisites: "4. CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)",
-      testResults: "5. RESULTADOS DE TESTES",
+      prerequisites: "3. CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)",
+      infrastructure: "4. INFRAESTRUTURA",
+      testResults: "5. RESULTADOS DOS TESTES:",
       confidential: "CONFIDENCIAL",
       fig: "Fig.",
       expected: "Resultado Esperado",
@@ -92,7 +93,8 @@ export const translations = {
       identification: "Identification",
       baseContent: "Base Content",
       infrastructure: "Infrastructure",
-      testExecution: "Test Execution"
+      testExecution: "Test Execution",
+      developedBy: "Developed by Gustavo Henrique Eli - Product Development Assistant"
     },
     identification: {
       title: "Report Title",
@@ -142,9 +144,9 @@ export const translations = {
     preview: {
       introduction: "1. INTRODUCTION",
       objectives: "2. OBJECTIVE",
-      infrastructure: "3. INFRASTRUCTURE",
-      prerequisites: "4. ENVIRONMENT SETTINGS (PREREQUISITES)",
-      testResults: "5. TEST RESULTS",
+      prerequisites: "3. ENVIRONMENT SETTINGS (PREREQUISITES)",
+      infrastructure: "4. INFRASTRUCTURE",
+      testResults: "5. TEST RESULTS:",
       confidential: "CONFIDENTIAL",
       fig: "Fig.",
       expected: "Expected Result",

@@ -121,7 +121,15 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       });
     }
 
-    // 3. Infraestrutura
+    // 3. Pré-requisitos
+    if (reportData.prerequisites) {
+      atoms.push(<h2 key="pre-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{t.preview.prerequisites}</h2>);
+      reportData.prerequisites.split('\n').filter(p => p.trim()).forEach((p, i) => {
+        atoms.push(<p key={`pre-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap leading-relaxed mb-4 atom">{p}</p>);
+      });
+    }
+
+    // 4. Infraestrutura
     if (reportData.infrastructure && reportData.infrastructure.length > 0) {
       atoms.push(
         <section key="infra" className="mb-8 atom">
@@ -136,14 +144,6 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
           </div>
         </section>
       );
-    }
-
-    // 4. Pré-requisitos
-    if (reportData.prerequisites) {
-      atoms.push(<h2 key="pre-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{t.preview.prerequisites}</h2>);
-      reportData.prerequisites.split('\n').filter(p => p.trim()).forEach((p, i) => {
-        atoms.push(<p key={`pre-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap leading-relaxed mb-4 atom">{p}</p>);
-      });
     }
 
     // 5. Testes (Cada parte do teste agora é um átomo para permitir quebra de página no meio de um teste)

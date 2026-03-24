@@ -4,6 +4,7 @@ import IdentificationForm from './IdentificationForm';
 import BaseContentForm from './BaseContentForm';
 import InfrastructureForm from './InfrastructureForm';
 import TestExecutionForm from './TestExecutionForm';
+import ChangelogModal from '../ui/ChangelogModal';
 
 const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -30,8 +31,10 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
 };
 
 const EditorSidebar = (props) => {
+  const [showChangelog, setShowChangelog] = useState(false);
+
   return (
-    <aside className="w-full md:w-[420px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-4 pb-32 z-10 scrollbar-thin scrollbar-thumb-gray-200">
+    <aside className="w-full md:w-[420px] bg-white border-r border-gray-200 overflow-y-auto overflow-x-hidden p-6 space-y-4 pb-32 z-10 scrollbar-thin scrollbar-thumb-gray-200">
       <CollapsibleSection title={props.t.sidebar.identification} defaultOpen={true}>
         <IdentificationForm 
           reportData={props.reportData} 
@@ -81,6 +84,22 @@ const EditorSidebar = (props) => {
           t={props.t}
         />
       </CollapsibleSection>
+
+      <div className="mt-8 pt-4 border-t border-gray-100 flex flex-col items-center justify-center opacity-90 pb-4">
+        <div className="flex items-center gap-2">
+          <p className="text-[10px] text-gray-400 font-medium text-center leading-relaxed">
+            {props.t.sidebar.developedBy}
+          </p>
+          <button 
+            onClick={() => setShowChangelog(true)} 
+            className="text-[9px] font-black text-[#00a335] hover:text-white bg-green-50 hover:bg-[#00a335] px-1.5 py-0.5 rounded transition-colors"
+          >
+            v1.0.1
+          </button>
+        </div>
+      </div>
+
+      <ChangelogModal isOpen={showChangelog} onClose={() => setShowChangelog(false)} t={props.t} />
     </aside>
   );
 };

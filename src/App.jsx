@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Header from './components/layout/Header';
 import EditorSidebar from './components/editor/EditorSidebar';
 import DocumentPreview from './components/preview/DocumentPreview';
@@ -16,6 +16,16 @@ const App = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lang, setLang] = useState('pt');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
+  const sidebarWidth = sidebarOpen ? (isMobile ? '100vw' : '420px') : '0';
   
   const reportStateUtils = useReportData();
   const { reportData, setReportData } = reportStateUtils;
@@ -130,15 +140,15 @@ const App = () => {
 
       <div className="flex-1 flex overflow-hidden relative">
         <div 
-          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden flex-shrink-0 z-10"
-          style={{ width: sidebarOpen ? '420px' : '0' }}
+          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden flex-shrink-0 z-20"
+          style={{ width: sidebarWidth }}
         >
-          <div className="w-[420px] h-full overflow-y-auto">
+          <div className="w-full md:w-[420px] h-full overflow-y-auto">
             <EditorSidebar {...reportStateUtils} lang={lang} t={t} />
           </div>
         </div>
 
-        <main className="flex-1 bg-slate-300 overflow-y-auto p-12 flex flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out">
+        <main className={`flex-1 bg-slate-300 overflow-y-auto ${isMobile && sidebarOpen ? 'hidden' : 'p-4 md:p-12 flex'} flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out`}>
           <div className="w-full flex flex-col items-center pdf-pages-container">
             <DocumentPreview ref={previewRef} reportData={reportData} lang={lang} t={t} />
           </div>
