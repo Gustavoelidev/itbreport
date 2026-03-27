@@ -22,6 +22,15 @@ const svgToPngBlob = (svgUrl) => {
   });
 };
 
+const getImageDimensions = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.width, height: img.height });
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
 const parseRichText = (text, options = {}) => {
   if (!text) return [new TextRun({ text: "", ...options })];
   const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -40,9 +49,14 @@ export const generateDOCX = async (reportData, t) => {
   try {
     const pngBlob = await svgToPngBlob(intelbrasLogo);
     const logoBuffer = await pngBlob.arrayBuffer();
+    const dims = await getImageDimensions(intelbrasLogo);
+    const ratio = dims.width / dims.height;
+    const logoW = 180;
+    const logoH = logoW / ratio;
+
     children.push(new Paragraph({
       alignment: AlignmentType.RIGHT,
-      children: [new ImageRun({ data: logoBuffer, transformation: { width: 220, height: 45 } })],
+      children: [new ImageRun({ data: logoBuffer, transformation: { width: logoW, height: logoH } })],
       spacing: { after: 400 }
     }));
   } catch (e) { console.warn('Erro ao converter logo SVG:', e); }
@@ -63,6 +77,12 @@ export const generateDOCX = async (reportData, t) => {
       alignment: AlignmentType.RIGHT,
       children: [new TextRun({ text: reportData.role || t.identification.role, size: 24, font: "Calibri" })]
     }),
+    ...(reportData.department ? [
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: [new TextRun({ text: reportData.department, size: 20, font: "Calibri", color: "666666", italic: true })]
+      })
+    ] : []),
     new Paragraph({
       alignment: AlignmentType.RIGHT,
       children: [new TextRun({ text: reportData.email, size: 20, font: "Calibri", color: "00A335", bold: true })]
@@ -216,9 +236,24 @@ export const generateDOCX = async (reportData, t) => {
             const imgResponse = await fetch(block.content);
             const imgBlob = await imgResponse.blob();
             const imgBuffer = await imgBlob.arrayBuffer();
+            
+            // Medição dinâmica para evitar distorção
+            const dims = await getImageDimensions(block.content);
+            const ratio = dims.width / dims.height;
+            
+            // Largura máxima de ~450 pontos para A4 com margens
+            let finalWidth = 450;
+            let finalHeight = finalWidth / ratio;
+            
+            // Se ficar muito alto, limita pela altura
+            if (finalHeight > 400) {
+              finalHeight = 400;
+              finalWidth = finalHeight * ratio;
+            }
+
             children.push(new Paragraph({
               alignment: AlignmentType.CENTER,
-              children: [new ImageRun({ data: imgBuffer, transformation: { width: 450, height: 280 } })],
+              children: [new ImageRun({ data: imgBuffer, transformation: { width: finalWidth, height: finalHeight } })],
               spacing: { before: 200, after: 100 }
             }));
             if (block.description) {
@@ -280,10 +315,16 @@ export const generateDOCX = async (reportData, t) => {
     const respF = await fetch(footerImage);
     const blobF = await respF.blob();
     const bufferF = await blobF.arrayBuffer();
+    
+    const dimsF = await getImageDimensions(footerImage);
+    const ratioF = dimsF.width / dimsF.height;
+    const footerW = 800;
+    const footerH = footerW / ratioF;
+
     const footerContent = new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: -750, right: -750 },
-      children: [new ImageRun({ data: bufferF, transformation: { width: 800, height: 60 } })]
+      children: [new ImageRun({ data: bufferF, transformation: { width: footerW, height: footerH } })]
     });
     footerConfig = { default: new Footer({ children: [footerContent] }) };
   } catch (e) { console.warn('Erro Footer:', e); }

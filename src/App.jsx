@@ -9,6 +9,9 @@ import { generateDOCX } from './services/exportDocx';
 import { translations } from './constants/translations';
 import { templates } from './constants/templates';
 import { translateText } from './services/translationService';
+import { supabase } from './lib/supabase';
+import AuthScreen from './components/auth/AuthScreen';
+import SplashScreen from './components/auth/SplashScreen';
 
 const App = () => {
   const previewRef = useRef(null);
@@ -17,7 +20,23 @@ const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lang, setLang] = useState('pt');
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -29,6 +48,40 @@ const App = () => {
   
   const reportStateUtils = useReportData();
   const { reportData, setReportData } = reportStateUtils;
+  
+  // Sync profile data with report data when session changes
+  useEffect(() => {
+    const syncProfile = async () => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile) {
+          setReportData(prev => ({
+            ...prev,
+            qaName: profile.full_name || prev.qaName,
+            role: profile.position || prev.role,
+            department: profile.department || prev.department,
+            email: session.user.email || prev.email
+          }));
+        } else {
+          // Fallback to metadata if profile table isn't ready
+          setReportData(prev => ({
+            ...prev,
+            qaName: session.user.user_metadata?.full_name || prev.qaName,
+            role: session.user.user_metadata?.position || prev.role,
+            department: session.user.user_metadata?.department || prev.department,
+            email: session.user.email || prev.email
+          }));
+        }
+      }
+    };
+    syncProfile();
+  }, [session, setReportData]);
+
   const t = translations[lang];
 
   const handleApplyTemplate = (templateId) => {
@@ -123,6 +176,25 @@ const App = () => {
     setIsExporting(false);
   };
 
+  useEffect(() => {
+    const monthsPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const monthsEN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    // Sempre puxa a data de HOJE do sistema
+    const today = new Date();
+    const formattedPT = `${today.getDate()} de ${monthsPT[today.getMonth()]} de ${today.getFullYear()}`;
+    const formattedEN = `${monthsEN[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+
+    const newDate = lang === 'pt' ? formattedPT : formattedEN;
+
+    if (newDate !== reportData.date) {
+      setReportData(prev => ({ ...prev, date: newDate }));
+    }
+  }, [lang, setReportData]);
+
+  if (authLoading) return <SplashScreen />;
+  if (!session) return <AuthScreen />;
+
   return (
     <div className="h-screen bg-[#f3f4f6] flex flex-col font-sans text-slate-800 overflow-hidden">
       <Header 
@@ -136,6 +208,7 @@ const App = () => {
         onApplyTemplate={handleApplyTemplate}
         onAutoTranslate={handleAutoTranslateReport}
         isTranslating={isTranslating}
+        user={session.user}
       />
 
       <div className="flex-1 flex overflow-hidden relative">

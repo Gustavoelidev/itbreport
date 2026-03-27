@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileDown, Menu, X, Languages, LayoutTemplate, ChevronDown } from 'lucide-react';
+import { Download, FileDown, Menu, X, Languages, LayoutTemplate, ChevronDown, LogOut } from 'lucide-react';
 import { MenuToggleIcon } from '../ui/menu-toggle-icon';
 import intelbrasLogo from '../../assets/intelbras-logo.svg';
 import { templates } from '../../constants/templates';
@@ -31,7 +31,7 @@ const Header = ({
   }, []);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 md:py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm flex-shrink-0 h-16 overflow-x-hidden">
+    <header className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 md:py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm flex-shrink-0 min-h-[64px]">
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
         <button 
           onClick={toggleSidebar}
@@ -130,6 +130,19 @@ const Header = ({
             <FileDown size={14} className="hidden xs:inline" /> PDF
           </button>
         </div>
+
+        {/* Logout Button */}
+        <div className="h-6 w-[1px] bg-gray-100 mx-1 hidden sm:block"></div>
+        <button
+          onClick={async () => {
+            const { error } = await import('../../lib/supabase').then(m => m.supabase.auth.signOut());
+            if (error) console.error('Error signing out:', error);
+          }}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+          title="Sair"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
     </header>
   );

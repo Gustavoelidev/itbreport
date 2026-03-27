@@ -6,6 +6,18 @@ const ChangelogModal = ({ isOpen, onClose, t }) => {
 
   const versions = [
     {
+      version: "1.0.2",
+      date: "Março 2026",
+      changes: [
+        "Implementação de banco de dados.",
+        "Sincronização de metadados do perfil (Nome, Cargo, Departamento).",
+        "Substituição de window.alert por componente modal customizado baseado no Style Guide Intelbras.",
+        "Implementação de localização dinâmica de data (ISO/Locale) baseada no idioma da interface.",
+        "Atualização da exportação DOCX para inclusão de campos de perfil (Cargo e Departamento).",
+        "Refatoração do layout da barra lateral para fixação de footer (v1.0.2)."
+      ]
+    },
+    {
       version: "1.0.1",
       date: "Março 2026",
       changes: [

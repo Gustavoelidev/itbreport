@@ -1,1 +1,131 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+@theme {
+  --font-sans: "SF Pro", "Roboto", "Arial", "Helvetica", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* Intelbras Style Guide Modal */
+.intelbras-modal-overlay {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 46, 56, 0.9);
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.intelbras-modal {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 450px;
+  padding: 35px;
+  color: #2b2e38;
+  background: #fff;  
+  text-align: left;
+  border-radius: 3px;
+  position: relative;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  animation: zoomIn 0.2s ease-out;
+}
+
+.intelbras-modal h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #008a2d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.intelbras-modal h4 {
+  margin: 0 0 25px 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #8b979f;
+}
+
+.intelbras-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.intelbras-modal-confirm {
+  color: #fff !important;
+  background: #00a335;
+  border: #00a335 2px solid;
+  padding: 8px 25px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.intelbras-modal-confirm:hover,
+.intelbras-modal-confirm:focus {
+  background: #00863F;
+  border: #00863F 2px solid;
+}
+
+.intelbras-modal-cancel {
+  color: #3e5055 !important;
+  background: #fff;
+  border: #8b979f 2px solid;
+  padding: 8px 25px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.intelbras-modal-cancel:hover,
+.intelbras-modal-cancel:focus {
+  background: #Ebeeee;
+  border: #8b979f 2px solid;
+}
+
+.intelbras-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: block;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  color: #95979c;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intelbras-modal-close:hover {
+  color: #2b2e38;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; scale: 0.95; }
+  to { opacity: 1; scale: 1; }
+}
