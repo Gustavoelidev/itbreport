@@ -99,7 +99,7 @@ const EditorSidebar = (props) => {
             onClick={() => setShowChangelog(true)} 
             className="text-[9px] font-black text-[#00a335] hover:text-white bg-green-50 hover:bg-[#00a335] px-1.5 py-0.5 rounded transition-colors"
           >
-            v1.0.2
+            v1.1.0
           </button>
         </div>
       </div>

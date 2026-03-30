@@ -6,6 +6,21 @@ const ChangelogModal = ({ isOpen, onClose, t }) => {
 
   const versions = [
     {
+      version: "1.1.0",
+      date: "Março 2026",
+      changes: [
+        "Login corporativo restrito ao domínio @intelbras.com.br.",
+        "Novo Checkbox animado com micro-interações Intelbras.",
+        "Suporte a Ctrl+V para colagem direta de imagens em evidências.",
+        "Sistema de Clonagem (Deep Copy) de cenários de teste.",
+        "Reordenação de cenários via botões de navegação.",
+        "Snapshot de Idioma: Restauração instantânea do texto original em Português.",
+        "Integração de Exportar/Importar Projeto via arquivo .json para persistência off-line.",
+        "Botão de Limpeza Rápida de dados integrado ao formulário.",
+        "Padronização total de Popups e Confirmações seguindo o Style Guide oficial."
+      ]
+    },
+    {
       version: "1.0.2",
       date: "Março 2026",
       changes: [

@@ -13,6 +13,7 @@ import { supabase } from './lib/supabase';
 import AuthScreen from './components/auth/AuthScreen';
 import SplashScreen from './components/auth/SplashScreen';
 import { defaultReportState } from './constants/defaultReportState';
+import IntelbrasModal from './components/ui/IntelbrasModal';
 
 const App = () => {
   const previewRef = useRef(null);
@@ -24,6 +25,42 @@ const App = () => {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [originalDataPtr, setOriginalDataPtr] = useState(null);
+  
+  // Modal State
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    onCancel: null,
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar'
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const showAlert = (title, message) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: closeModal,
+      onCancel: null,
+      confirmText: 'OK'
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, onCancel = closeModal) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => { onConfirm(); closeModal(); },
+      onCancel: () => { if (onCancel) onCancel(); closeModal(); },
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar'
+    });
+  };
   
   const handleSetLang = (newLang) => {
     if (newLang === 'pt' && lang === 'en' && originalDataPtr) {
@@ -103,24 +140,33 @@ const App = () => {
 
   const handleApplyTemplate = (templateId) => {
     const template = templates.find(temp => temp.id === templateId);
-    if (template && window.confirm(t.templates.confirmChange)) {
-      setReportData(prev => ({
-        ...prev,
-        ...template.state,
-        date: prev.date 
-      }));
+    if (template) {
+      showConfirm(
+        t.templates.title,
+        t.templates.confirmChange,
+        () => {
+          setReportData(prev => ({
+            ...prev,
+            ...template.state,
+            date: prev.date 
+          }));
+        }
+      );
     }
   };
 
   const handleAutoTranslateReport = async () => {
     if (!reportData || !reportData.tests) return;
     
-    if (window.confirm(t.translations.confirmTranslate)) {
-      setIsTranslating(true);
-      const from = lang === 'pt' ? 'pt' : 'en';
-      const to = lang === 'pt' ? 'en' : 'pt';
+    showConfirm(
+      t.translations.autoTranslate,
+      t.translations.confirmTranslate,
+      async () => {
+        setIsTranslating(true);
+        const from = lang === 'pt' ? 'pt' : 'en';
+        const to = lang === 'pt' ? 'en' : 'pt';
 
-      try {
+        try {
         if (from === 'pt') {
           setOriginalDataPtr(JSON.parse(JSON.stringify(reportData)));
         }
@@ -177,29 +223,34 @@ const App = () => {
         setLang(to); 
       } catch (err) {
         if (err.message === "LIMIT_EXCEEDED") {
-          alert("Aviso: Limite diário de tradução gratuita atingido. O conteúdo restante permanecerá no idioma original.");
+          showAlert(t.translations.autoTranslate, "Aviso: Limite diário de tradução gratuita atingido. O conteúdo restante permanecerá no idioma original.");
         } else {
           console.error("Erro na tradução:", err);
-          alert("Ocorreu um erro inesperado durante a tradução.");
+          showAlert(t.translations.autoTranslate, "Ocorreu um erro inesperado durante a tradução.");
         }
       } finally {
         setIsTranslating(false);
       }
     }
-  };
+  );
+};
 
   const handleResetReport = () => {
-    if (window.confirm("Atenção: Todos os dados não salvos deste relatório serão descartados. Tem certeza que deseja LIMPAR TUDO?")) {
-      const resetState = JSON.parse(JSON.stringify(defaultReportState));
-      if (session?.user) {
-        resetState.qaName = reportData.qaName;
-        resetState.role = reportData.role;
-        resetState.department = reportData.department;
-        resetState.email = reportData.email;
+    showConfirm(
+      "Limpar Relatório",
+      "Atenção: Todos os dados não salvos deste relatório serão descartados. Tem certeza que deseja LIMPAR TUDO?",
+      () => {
+        const resetState = JSON.parse(JSON.stringify(defaultReportState));
+        if (session?.user) {
+          resetState.qaName = reportData.qaName;
+          resetState.role = reportData.role;
+          resetState.department = reportData.department;
+          resetState.email = reportData.email;
+        }
+        setReportData(resetState);
+        setOriginalDataPtr(null);
       }
-      setReportData(resetState);
-      setOriginalDataPtr(null);
-    }
+    );
   };
 
   const handleExportPDF = async () => {
@@ -232,12 +283,12 @@ const App = () => {
         const importedData = JSON.parse(e.target.result);
         if (importedData && importedData.title !== undefined) {
           setReportData(importedData);
-          alert("Projeto carregado com sucesso!");
+          showAlert("Sucesso", "Projeto carregado com sucesso!");
         } else {
-          alert("Arquivo JSON inválido.");
+          showAlert("Erro", "Arquivo JSON inválido.");
         }
       } catch (error) {
-        alert("Erro ao ler o arquivo JSON.");
+        showAlert("Erro", "Erro ao ler o arquivo JSON.");
       }
     };
     reader.readAsText(file);
@@ -308,6 +359,11 @@ const App = () => {
           message={isTranslating ? t.translations.translating : undefined} 
         />
       )}
+
+      <IntelbrasModal 
+        {...modalConfig} 
+        onClose={closeModal} 
+      />
     </div>
   );
 };
