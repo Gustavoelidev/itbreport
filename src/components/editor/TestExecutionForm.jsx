@@ -1,11 +1,13 @@
 import React from 'react';
-import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight, Copy } from 'lucide-react';
 
 const TestExecutionForm = ({ 
   reportData, 
   handleTestChange, 
   addTestCase, 
   removeTestCase,
+  duplicateTestCase,
+  moveTestCase,
   addBlock,
   removeBlock,
   handleBlockChange,
@@ -54,13 +56,38 @@ const TestExecutionForm = ({
                   </span>
                 )}
               </div>
-              <button 
-                onClick={() => removeTestCase(test.id)} 
-                className="text-gray-300 hover:text-red-500 transition-colors"
-                title="Remover Cenário"
-              >
-                <Trash2 size={16}/>
-              </button>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => moveTestCase(test.id, 'up')} 
+                  disabled={index === 0}
+                  className="text-gray-300 hover:text-gray-500 disabled:opacity-30 disabled:hover:text-gray-300 transition-colors"
+                  title="Mover para cima"
+                >
+                  <ChevronUp size={16}/>
+                </button>
+                <button 
+                  onClick={() => moveTestCase(test.id, 'down')} 
+                  disabled={index === reportData.tests.length - 1}
+                  className="text-gray-300 hover:text-gray-500 disabled:opacity-30 disabled:hover:text-gray-300 transition-colors mr-2"
+                  title="Mover para baixo"
+                >
+                  <ChevronDown size={16}/>
+                </button>
+                <button 
+                  onClick={() => duplicateTestCase(test.id)} 
+                  className="text-gray-300 hover:text-blue-500 transition-colors mr-1"
+                  title="Clonar Cenário"
+                >
+                  <Copy size={16}/>
+                </button>
+                <button 
+                  onClick={() => removeTestCase(test.id)} 
+                  className="text-gray-300 hover:text-red-500 transition-colors"
+                  title="Remover Cenário"
+                >
+                  <Trash2 size={16}/>
+                </button>
+              </div>
             </div>
 
             {!isCollapsed && (
@@ -230,7 +257,17 @@ const TestExecutionForm = ({
                         )}
 
                         {block.type === 'image' && (
-                          <div className="space-y-3">
+                          <div 
+                            className="space-y-3 outline-none focus:ring-1 focus:ring-slate-200 rounded-md p-1 -m-1"
+                            tabIndex={0}
+                            title="Você pode clicar aqui e usar Ctrl+V para colar uma imagem"
+                            onPaste={(e) => {
+                              const file = e.clipboardData?.files?.[0];
+                              if (file && file.type.startsWith('image/')) {
+                                handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+                              }
+                            }}
+                          >
                             {block.content ? (
                               <div className="relative group/img overflow-hidden rounded-md border border-slate-200">
                                 <img src={block.content} className="w-full h-32 object-cover" alt="Preview"/>
@@ -240,11 +277,27 @@ const TestExecutionForm = ({
                                 </label>
                               </div>
                             ) : (
-                              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
-                                <ImageIcon size={20} className="text-slate-300" />
-                                <span className="text-[10px] text-slate-400 font-medium mt-1">{t.testExecution.blocks.placeholderImage}</span>
-                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
-                              </label>
+                              <div 
+                                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-200 rounded-lg bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-colors outline-none cursor-text focus:ring-2 focus:ring-indigo-400/50 group/box"
+                                tabIndex={0}
+                                title="Clique aqui para focar e aperte Ctrl+V para colar"
+                                onPaste={(e) => {
+                                  const file = e.clipboardData?.files?.[0];
+                                  if (file && file.type.startsWith('image/')) {
+                                    handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+                                  }
+                                }}
+                              >
+                                <ImageIcon size={22} className="text-indigo-300 group-hover/box:text-indigo-500 transition-colors mb-1" />
+                                <span className="text-[10px] font-medium text-slate-500 mb-1">{t.testExecution.blocks.placeholderImage}</span>
+                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-100/70 px-2 py-1 rounded">
+                                  Clique e aperte Ctrl + V
+                                </span>
+                                <label className="mt-3 text-[9px] font-bold text-[#00a335] hover:text-[#008a2d] hover:underline cursor-pointer uppercase tracking-wider">
+                                  Ou procurar arquivo...
+                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
+                                </label>
+                              </div>
                             )}
                             <input 
                               placeholder={t.testExecution.blocks.placeholderImage} 

@@ -68,6 +68,43 @@ export const useReportData = () => {
     }));
   };
 
+  const duplicateTestCase = (id) => {
+    const currentTest = reportData.tests.find(t => t.id === id);
+    if (!currentTest) return;
+    
+    // Deep clone the test and regenerate all IDs
+    const newTest = {
+      ...currentTest,
+      id: Date.now(),
+      scenario: `${currentTest.scenario || ''} (Cópia)`,
+      blocks: currentTest.blocks ? currentTest.blocks.map(b => ({
+        ...b,
+        id: Date.now() + Math.random(),
+        items: b.items ? b.items.map(i => ({ ...i, id: Date.now() + Math.random() })) : []
+      })) : []
+    };
+
+    setReportData(prev => {
+      const index = prev.tests.findIndex(t => t.id === id);
+      const newTests = [...prev.tests];
+      newTests.splice(index + 1, 0, newTest);
+      return { ...prev, tests: newTests };
+    });
+  };
+
+  const moveTestCase = (id, direction) => {
+    setReportData(prev => {
+      const tests = [...prev.tests];
+      const index = tests.findIndex(t => t.id === id);
+      if (direction === 'up' && index > 0) {
+        [tests[index], tests[index - 1]] = [tests[index - 1], tests[index]];
+      } else if (direction === 'down' && index < tests.length - 1) {
+        [tests[index], tests[index + 1]] = [tests[index + 1], tests[index]];
+      }
+      return { ...prev, tests };
+    });
+  };
+
   const handleImageUpload = (testId, e) => {
     const file = e.target.files[0];
     if (file) {
@@ -187,6 +224,8 @@ export const useReportData = () => {
     handleTestChange,
     addTestCase,
     removeTestCase,
+    duplicateTestCase,
+    moveTestCase,
     handleImageUpload,
     removeEvidence,
     updateEvidenceDescription,

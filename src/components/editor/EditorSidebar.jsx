@@ -48,6 +48,7 @@ const EditorSidebar = (props) => {
           <BaseContentForm 
             reportData={props.reportData} 
             handleInputChange={props.handleInputChange} 
+            onClearData={props.onClearData}
             t={props.t}
           />
         </CollapsibleSection>
@@ -68,6 +69,8 @@ const EditorSidebar = (props) => {
             handleTestChange={props.handleTestChange} 
             addTestCase={props.addTestCase} 
             removeTestCase={props.removeTestCase} 
+            duplicateTestCase={props.duplicateTestCase}
+            moveTestCase={props.moveTestCase}
             handleImageUpload={props.handleImageUpload} 
             removeEvidence={props.removeEvidence} 
             updateEvidenceDescription={props.updateEvidenceDescription} 

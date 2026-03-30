@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { User, Lock, Building, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import intelbrasLogo from '../../assets/intelbras-logo.svg';
 import IntelbrasModal from '../ui/IntelbrasModal';
+import { Checkbox } from '../ui/animate-checkbox';
 
 const AuthScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +18,7 @@ const AuthScreen = () => {
   const [fullName, setFullName] = useState('');
   const [department, setDepartment] = useState('');
   const [position, setPosition] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,9 +26,20 @@ const AuthScreen = () => {
     setError(null);
 
     try {
+      if (!email.toLowerCase().endsWith('@intelbras.com.br')) {
+        throw new Error('Apenas e-mails corporativos da Intelbras são permitidos.');
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        if (!rememberMe) {
+          localStorage.setItem('temp_auth_user', 'true');
+          sessionStorage.setItem('session_active', 'true');
+        } else {
+          localStorage.removeItem('temp_auth_user');
+        }
       } else {
         const { data: { user }, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -132,7 +145,7 @@ const AuthScreen = () => {
             <input
               type="email"
               required
-              placeholder={isLogin ? "Usuário" : "E-mail"}
+              placeholder="E-mail"
               className="block w-full pl-10 pr-3 py-2.5 border border-[#bbcad2] rounded-md leading-5 bg-white text-[#8b979f] placeholder-[#bbcad2] focus:outline-none focus:ring-1 focus:ring-[#00a335] focus:border-[#00a335] sm:text-sm transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -160,6 +173,23 @@ const AuthScreen = () => {
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
+
+          {isLogin && (
+            <div className="flex items-center">
+              <Checkbox
+                id="remember-me"
+                checked={rememberMe}
+                onCheckedChange={setRememberMe}
+              />
+              <label 
+                htmlFor="remember-me" 
+                className="ml-2 block text-sm text-[#8b979f] cursor-pointer"
+                onClick={() => setRememberMe(!rememberMe)}
+              >
+                Lembrar-me
+              </label>
+            </div>
+          )}
 
           {error && (
             <div className="text-red-500 text-xs mt-2 text-center animate-shake">

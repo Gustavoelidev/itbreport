@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileDown, Menu, X, Languages, LayoutTemplate, ChevronDown, LogOut } from 'lucide-react';
+import { Download, FileDown, Menu, X, Languages, LayoutTemplate, ChevronDown, LogOut, Save, Upload, Eraser } from 'lucide-react';
 import { MenuToggleIcon } from '../ui/menu-toggle-icon';
 import intelbrasLogo from '../../assets/intelbras-logo.svg';
 import { templates } from '../../constants/templates';
@@ -14,12 +14,13 @@ const Header = ({
   t,
   onApplyTemplate,
   onAutoTranslate,
-  isTranslating
+  isTranslating,
+  onExportJSON,
+  onImportJSON
 }) => {
   const [showTemplates, setShowTemplates] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -29,6 +30,14 @@ const Header = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      onImportJSON(file);
+    }
+    e.target.value = '';
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 md:py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm flex-shrink-0 min-h-[64px]">
@@ -118,13 +127,33 @@ const Header = ({
 
         <div className="flex gap-1 md:gap-2 ml-1 md:ml-2">
           <button 
+            onClick={() => document.getElementById('import-json').click()}
+            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2 text-[10px] md:text-[11px] font-black text-[#8b979f] hover:text-[#2b2e38] transition-colors border border-[#bbcad2] rounded-md hover:bg-gray-50 uppercase tracking-widest"
+            title="Carregar Projeto (.json)"
+          >
+            <Upload size={14} className="hidden xl:inline" /> Carregar
+          </button>
+          <input type="file" id="import-json" accept=".json,.qa" className="hidden" onChange={handleFileChange} />
+          
+          <button 
+            onClick={onExportJSON}
+            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2 text-[10px] md:text-[11px] font-black text-[#00a335] hover:text-white transition-colors border border-[#00a335] rounded-md hover:bg-[#00a335] uppercase tracking-widest"
+            title="Salvar Projeto (.json)"
+          >
+            <Save size={14} className="hidden xl:inline" /> Salvar
+          </button>
+          
+          {/* <button 
             onClick={onExportDOCX}
             className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2 text-[10px] md:text-[11px] font-black text-gray-600 hover:text-gray-900 transition-colors border border-gray-200 rounded-md hover:bg-gray-50 uppercase tracking-widest"
           >
             <Download size={14} className="hidden xs:inline" /> DOCX
-          </button>
+          </button> */}
           <button 
-            onClick={onExportPDF}
+            onClick={() => {
+              onExportJSON();
+              onExportPDF();
+            }}
             className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 bg-[#00a335] text-white rounded-md hover:bg-[#008a2d] font-black text-[10px] md:text-[11px] shadow-sm transition-all hover:shadow-md uppercase tracking-widest"
           >
             <FileDown size={14} className="hidden xs:inline" /> PDF

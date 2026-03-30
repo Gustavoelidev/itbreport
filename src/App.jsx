@@ -12,6 +12,7 @@ import { translateText } from './services/translationService';
 import { supabase } from './lib/supabase';
 import AuthScreen from './components/auth/AuthScreen';
 import SplashScreen from './components/auth/SplashScreen';
+import { defaultReportState } from './constants/defaultReportState';
 
 const App = () => {
   const previewRef = useRef(null);
@@ -22,9 +23,25 @@ const App = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [originalDataPtr, setOriginalDataPtr] = useState(null);
   
+  const handleSetLang = (newLang) => {
+    if (newLang === 'pt' && lang === 'en' && originalDataPtr) {
+      setReportData(originalDataPtr);
+      setOriginalDataPtr(null);
+    }
+    setLang(newLang);
+  };
   useEffect(() => {
     // Check initial session
+    if (localStorage.getItem('temp_auth_user') && !sessionStorage.getItem('session_active')) {
+      supabase.auth.signOut().then(() => {
+        localStorage.removeItem('temp_auth_user');
+      });
+    } else if (localStorage.getItem('temp_auth_user')) {
+      sessionStorage.setItem('session_active', 'true');
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
@@ -62,19 +79,19 @@ const App = () => {
         if (profile) {
           setReportData(prev => ({
             ...prev,
-            qaName: profile.full_name || prev.qaName,
-            role: profile.position || prev.role,
-            department: profile.department || prev.department,
-            email: session.user.email || prev.email
+            qaName: prev.qaName || profile.full_name,
+            role: prev.role || profile.position,
+            department: prev.department || profile.department,
+            email: prev.email || session.user.email
           }));
         } else {
           // Fallback to metadata if profile table isn't ready
           setReportData(prev => ({
             ...prev,
-            qaName: session.user.user_metadata?.full_name || prev.qaName,
-            role: session.user.user_metadata?.position || prev.role,
-            department: session.user.user_metadata?.department || prev.department,
-            email: session.user.email || prev.email
+            qaName: prev.qaName || session.user.user_metadata?.full_name,
+            role: prev.role || session.user.user_metadata?.position,
+            department: prev.department || session.user.user_metadata?.department,
+            email: prev.email || session.user.email
           }));
         }
       }
@@ -104,6 +121,10 @@ const App = () => {
       const to = lang === 'pt' ? 'en' : 'pt';
 
       try {
+        if (from === 'pt') {
+          setOriginalDataPtr(JSON.parse(JSON.stringify(reportData)));
+        }
+
         const newData = JSON.parse(JSON.stringify(reportData));
         
         const safeTranslate = async (txt) => {
@@ -116,6 +137,9 @@ const App = () => {
 
         // Processo sequencial com tratamento de limite
         newData.title = await safeTranslate(newData.title);
+        newData.qaName = await safeTranslate(newData.qaName);
+        newData.role = await safeTranslate(newData.role);
+        newData.department = await safeTranslate(newData.department);
         newData.introduction = await safeTranslate(newData.introduction);
         newData.objectives = await safeTranslate(newData.objectives);
         newData.prerequisites = await safeTranslate(newData.prerequisites);
@@ -164,6 +188,20 @@ const App = () => {
     }
   };
 
+  const handleResetReport = () => {
+    if (window.confirm("Atenção: Todos os dados não salvos deste relatório serão descartados. Tem certeza que deseja LIMPAR TUDO?")) {
+      const resetState = JSON.parse(JSON.stringify(defaultReportState));
+      if (session?.user) {
+        resetState.qaName = reportData.qaName;
+        resetState.role = reportData.role;
+        resetState.department = reportData.department;
+        resetState.email = reportData.email;
+      }
+      setReportData(resetState);
+      setOriginalDataPtr(null);
+    }
+  };
+
   const handleExportPDF = async () => {
     setIsExporting(true);
     await generatePDF(previewRef.current, reportData.title);
@@ -174,6 +212,35 @@ const App = () => {
     setIsExporting(true);
     await generateDOCX(reportData, t);
     setIsExporting(false);
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    const filename = reportData.title ? `${reportData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json` : 'report.json';
+    downloadAnchorNode.setAttribute("download", filename);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
+  const handleImportJSON = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData && importedData.title !== undefined) {
+          setReportData(importedData);
+          alert("Projeto carregado com sucesso!");
+        } else {
+          alert("Arquivo JSON inválido.");
+        }
+      } catch (error) {
+        alert("Erro ao ler o arquivo JSON.");
+      }
+    };
+    reader.readAsText(file);
   };
 
   useEffect(() => {
@@ -200,11 +267,14 @@ const App = () => {
       <Header 
         onExportDOCX={handleExportDOCX} 
         onExportPDF={handleExportPDF} 
+        onExportJSON={handleExportJSON}
+        onImportJSON={handleImportJSON}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         sidebarOpen={sidebarOpen}
         lang={lang}
-        setLang={setLang}
+        setLang={handleSetLang}
         t={t}
+        onClearData={handleResetReport}
         onApplyTemplate={handleApplyTemplate}
         onAutoTranslate={handleAutoTranslateReport}
         isTranslating={isTranslating}
@@ -217,7 +287,12 @@ const App = () => {
           style={{ width: sidebarWidth }}
         >
           <div className="w-full md:w-[420px] h-full overflow-y-auto">
-            <EditorSidebar {...reportStateUtils} lang={lang} t={t} />
+            <EditorSidebar 
+              {...reportStateUtils} 
+              onClearData={handleResetReport} 
+              lang={lang} 
+              t={t} 
+            />
           </div>
         </div>
 
