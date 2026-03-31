@@ -33,7 +33,7 @@ const AuthScreen = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        
+
         if (!rememberMe) {
           localStorage.setItem('temp_auth_user', 'true');
           sessionStorage.setItem('session_active', 'true');
@@ -53,19 +53,19 @@ const AuthScreen = () => {
           }
         });
         if (signUpError) throw signUpError;
-        
+
         if (user) {
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert([{ 
-              id: user.id, 
-              full_name: fullName, 
+            .insert([{
+              id: user.id,
+              full_name: fullName,
               department: department,
-              position: position 
+              position: position
             }]);
           if (profileError) console.error('Error creating profile:', profileError);
         }
-        
+
         setShowSuccessModal(true);
       }
     } catch (err) {
@@ -98,7 +98,7 @@ const AuthScreen = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Analista"
+                  placeholder="Nome completo"
                   className="block w-full pl-10 pr-3 py-2.5 border border-[#bbcad2] rounded-md leading-5 bg-white text-[#8b979f] placeholder-[#bbcad2] focus:outline-none focus:ring-1 focus:ring-[#00a335] focus:border-[#00a335] sm:text-sm transition-all"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -181,8 +181,8 @@ const AuthScreen = () => {
                 checked={rememberMe}
                 onCheckedChange={setRememberMe}
               />
-              <label 
-                htmlFor="remember-me" 
+              <label
+                htmlFor="remember-me"
                 className="ml-2 block text-sm text-[#8b979f] cursor-pointer"
                 onClick={() => setRememberMe(!rememberMe)}
               >
@@ -207,7 +207,7 @@ const AuthScreen = () => {
         </form>
 
         <div className="mt-8 flex flex-col items-center gap-4">
-          <button 
+          <button
             type="button"
             className="text-xs text-[#8b979f] opacity-50 cursor-not-allowed"
             title="Funcionalidade em desenvolvimento"
@@ -215,7 +215,7 @@ const AuthScreen = () => {
           >
             Recuperar senha
           </button>
-          
+
           <div className="h-[1px] w-full bg-[#bbcad2] opacity-30"></div>
 
           <button
@@ -228,8 +228,8 @@ const AuthScreen = () => {
         </div>
       </div>
 
-      <IntelbrasModal 
-        isOpen={showSuccessModal} 
+      <IntelbrasModal
+        isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
           setIsLogin(true);

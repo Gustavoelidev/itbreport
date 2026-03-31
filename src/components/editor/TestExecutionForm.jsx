@@ -251,7 +251,7 @@ const TestExecutionForm = ({
                               placeholder={t.testExecution.blocks.placeholderCode} 
                               value={block.content}
                               onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
-                              className="w-full text-[10px] p-2 bg-gray-900 text-emerald-400 font-mono rounded border border-gray-800 outline-none h-24"
+                              className="w-full text-[10px] p-2 bg-gray-900 text-emerald-400 font-mono rounded border border-gray-800 outline-none min-h-[100px] h-auto scrollbar-hide"
                             />
                           </div>
                         )}

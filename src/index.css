@@ -125,7 +125,17 @@ body {
   to { opacity: 1; }
 }
 
+
 @keyframes zoomIn {
   from { opacity: 0; scale: 0.95; }
   to { opacity: 1; scale: 1; }
+}
+
+/* Utilitário para esconder barras de rolagem */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

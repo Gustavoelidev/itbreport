@@ -97,8 +97,8 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                         ↳ {renderRichText(block.description)}
                       </p>
                     )}
-                    <div className="bg-gray-100 p-4 rounded-sm border border-gray-200 overflow-x-auto">
-                      <pre className="text-[10px] whitespace-pre-wrap m-0 leading-tight" style={{ fontFamily: monoStack }}>
+                    <div className="bg-gray-100 p-4 rounded-sm border border-gray-200 scrollbar-hide">
+                      <pre className="text-[10px] whitespace-pre-wrap break-all m-0 leading-tight" style={{ fontFamily: monoStack }}>
                         {block.content}
                       </pre>
                     </div>
