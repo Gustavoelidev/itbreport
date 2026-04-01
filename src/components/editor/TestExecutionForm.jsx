@@ -1,5 +1,227 @@
 import React from 'react';
-import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight, Copy } from 'lucide-react';
+import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight, Copy, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  pointerWithin,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+const SortableBlockItem = ({ 
+  test, 
+  block, 
+  handleBlockChange, 
+  handleBlockImageUpload, 
+  addListItem, 
+  removeListItem, 
+  handleListItemChange, 
+  moveBlock, 
+  removeBlock, 
+  t 
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`relative pl-4 border-l-2 border-slate-100 group/block ${isDragging ? 'bg-slate-50 ring-2 ring-[#00a335] ring-opacity-10 rounded-lg' : ''}`}
+    >
+      <div className="absolute -left-[9px] top-0 flex flex-col items-center bg-white">
+        <div 
+          {...attributes}
+          {...listeners}
+          className={`w-4 h-4 rounded-full border-2 border-slate-200 flex items-center justify-center bg-white cursor-grab active:cursor-grabbing hover:border-[#00a335] transition-colors`}
+          title="Segure para arrastar"
+        >
+          {block.type === 'subtopic' && <Layout size={8} className="text-indigo-500 fill-indigo-50" />}
+          {block.type === 'step' && <Type size={8} className="text-emerald-500" />}
+          {block.type === 'list' && <List size={8} className="text-blue-500" />}
+          {block.type === 'code' && <Code size={8} className="text-slate-500" />}
+          {block.type === 'image' && <ImageIcon size={8} className="text-amber-500 fill-amber-50" />}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">
+              {block.type === 'subtopic' ? t.testExecution.blocks.subtopic : block.type === 'step' ? t.testExecution.blocks.step : block.type === 'code' ? t.testExecution.blocks.code : block.type === 'list' ? t.testExecution.blocks.list : t.testExecution.blocks.image}
+            </span>
+            <div 
+              {...attributes}
+              {...listeners}
+              className="opacity-0 group-hover/block:opacity-100 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-all"
+            >
+              <GripVertical size={10} />
+            </div>
+          </div>
+          <div className="flex items-center gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity">
+            <button onClick={() => moveBlock(test.id, block.id, 'up')} className="p-0.5 hover:bg-slate-100 rounded text-gray-400"><ChevronUp size={12}/></button>
+            <button onClick={() => moveBlock(test.id, block.id, 'down')} className="p-0.5 hover:bg-slate-100 rounded text-gray-400"><ChevronDown size={12}/></button>
+            <button onClick={() => removeBlock(test.id, block.id)} className="p-0.5 hover:bg-red-50 rounded text-red-300 hover:text-red-500 ml-1"><X size={12}/></button>
+          </div>
+        </div>
+
+        {block.type === 'subtopic' && (
+          <input 
+            placeholder={t.testExecution.blocks.placeholderSubtopic} 
+            value={block.content}
+            onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
+            className="w-full text-xs font-bold bg-white outline-none border-b border-gray-100 focus:border-indigo-400"
+          />
+        )}
+
+        {block.type === 'step' && (
+          <textarea 
+            placeholder={t.testExecution.blocks.placeholderStep} 
+            value={block.content}
+            onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
+            className="w-full text-[11px] p-2 bg-white border border-gray-100 rounded outline-none focus:border-emerald-400 min-h-[60px]"
+          />
+        )}
+
+        {block.type === 'list' && (
+          <div className="space-y-2">
+            <div className="flex gap-2 items-center bg-slate-50 p-1 rounded">
+              <button 
+                onClick={() => handleBlockChange(test.id, block.id, 'listType', 'bullet')}
+                className={`p-1 rounded ${block.listType === 'bullet' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-200'}`}
+              >
+                <List size={12}/>
+              </button>
+              <button 
+                onClick={() => handleBlockChange(test.id, block.id, 'listType', 'number')}
+                className={`p-1 rounded ${block.listType === 'number' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-200'}`}
+              >
+                <ListOrdered size={12}/>
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              {block.items.map((item, iIndex) => (
+                <div key={item.id} className="flex gap-2 items-start group/item">
+                  <span className="text-[10px] text-gray-400 mt-1.5 w-4 text-center font-bold">
+                    {block.listType === 'number' ? `${iIndex + 1}.` : '•'}
+                  </span>
+                  <input 
+                    placeholder="..." 
+                    value={item.text}
+                    onChange={e => handleListItemChange(test.id, block.id, item.id, e.target.value)}
+                    className="flex-1 text-[11px] p-1 border-b border-transparent focus:border-blue-200 outline-none"
+                  />
+                  <button 
+                    onClick={() => removeListItem(test.id, block.id, item.id)}
+                    className="opacity-0 group-hover/item:opacity-100 p-1 text-gray-300 hover:text-red-500"
+                  >
+                    <X size={10}/>
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <button 
+              onClick={() => addListItem(test.id, block.id)}
+              className="w-full py-1 text-[9px] font-bold text-blue-500 border border-dashed border-blue-200 rounded hover:bg-blue-50 transition-colors uppercase"
+            >
+              + {t.testExecution.blocks.list}
+            </button>
+          </div>
+        )}
+
+        {block.type === 'code' && (
+          <div className="space-y-2">
+            <input 
+              placeholder={t.testExecution.blocks.placeholderCodeDesc} 
+              value={block.description}
+              onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
+              className="w-full text-[10px] font-medium text-slate-500 outline-none italic"
+            />
+            <textarea 
+              placeholder={t.testExecution.blocks.placeholderCode} 
+              value={block.content}
+              onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
+              className="w-full text-[11px] p-3 bg-gray-900 text-[#50fa7b] font-mono rounded border border-gray-800 outline-none min-h-[120px] h-auto scrollbar-hide shadow-inner leading-relaxed"
+              style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}
+            />
+          </div>
+        )}
+
+        {block.type === 'image' && (
+          <div 
+            className="space-y-3 outline-none focus:ring-1 focus:ring-slate-200 rounded-md p-1 -m-1"
+            tabIndex={0}
+            title="Você pode clicar aqui e usar Ctrl+V para colar uma imagem"
+            onPaste={(e) => {
+              const file = e.clipboardData?.files?.[0];
+              if (file && file.type.startsWith('image/')) {
+                handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+              }
+            }}
+          >
+            {block.content ? (
+              <div className="relative group/img overflow-hidden rounded-md border border-slate-200 shadow-sm bg-slate-50">
+                <img src={block.content} className="w-full max-h-[400px] object-contain mx-auto" alt="Preview"/>
+                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer">
+                  <span className="text-[10px] text-white font-bold uppercase">{t.testExecution.blocks.image}</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
+                </label>
+              </div>
+            ) : (
+              <div 
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-200 rounded-lg bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-colors outline-none cursor-text focus:ring-2 focus:ring-indigo-400/50 group/box"
+                tabIndex={0}
+                onPaste={(e) => {
+                  const file = e.clipboardData?.files?.[0];
+                  if (file && file.type.startsWith('image/')) {
+                    handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+                  }
+                }}
+              >
+                <ImageIcon size={22} className="text-indigo-300 group-hover/box:text-indigo-500 transition-colors mb-1" />
+                <span className="text-[10px] font-medium text-slate-500 mb-1">{t.testExecution.blocks.placeholderImage}</span>
+                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-100/70 px-2 py-1 rounded">
+                  Clique e aperte Ctrl + V
+                </span>
+                <label className="mt-3 text-[9px] font-bold text-[#00a335] hover:text-[#008a2d] hover:underline cursor-pointer uppercase tracking-wider">
+                  Ou procurar arquivo...
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
+                </label>
+              </div>
+            )}
+            <input 
+              placeholder={t.testExecution.blocks.placeholderImage} 
+              value={block.description}
+              onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
+              className="w-full text-[10px] p-1.5 border border-gray-100 rounded focus:border-amber-400 outline-none bg-slate-50/50"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const TestExecutionForm = ({ 
   reportData, 
@@ -16,6 +238,7 @@ const TestExecutionForm = ({
   removeListItem,
   handleListItemChange,
   moveBlock,
+  reorderBlocks,
   t
 }) => {
   const [collapsedTests, setCollapsedTests] = React.useState({});
@@ -26,6 +249,30 @@ const TestExecutionForm = ({
       [id]: !prev[id]
     }));
   };
+
+  const handleDragEnd = (event, testId) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const test = reportData.tests.find(t => t.id === testId);
+      if (!test) return;
+      
+      const oldIndex = test.blocks.findIndex(b => b.id === active.id);
+      const newIndex = test.blocks.findIndex(b => b.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        reorderBlocks(testId, oldIndex, newIndex);
+      }
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
 
   return (
     <section className="space-y-4">
@@ -143,173 +390,35 @@ const TestExecutionForm = ({
                   </button>
                 </div>
 
-                <div className="text-[9px] text-gray-400 text-center italic">
-                  {t.testExecution.blocks.boldTip}
-                </div>
-
                 {/* RENDER BLOCKS */}
                 <div className="space-y-4 min-h-[50px]">
-                  {test.blocks && test.blocks.map((block, bIndex) => (
-                    <div key={block.id} className="relative pl-4 border-l-2 border-slate-100 group/block">
-                      <div className="absolute -left-[9px] top-0 flex flex-col items-center bg-white">
-                        <div className={`w-4 h-4 rounded-full border-2 border-slate-200 flex items-center justify-center bg-white`}>
-                          {block.type === 'subtopic' && <Layout size={8} className="text-indigo-500 fill-indigo-50" />}
-                          {block.type === 'step' && <Type size={8} className="text-emerald-500" />}
-                          {block.type === 'list' && <List size={8} className="text-blue-500" />}
-                          {block.type === 'code' && <Code size={8} className="text-slate-500" />}
-                          {block.type === 'image' && <ImageIcon size={8} className="text-amber-500 fill-amber-50" />}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">
-                            {block.type === 'subtopic' ? t.testExecution.blocks.subtopic : block.type === 'step' ? t.testExecution.blocks.step : block.type === 'code' ? t.testExecution.blocks.code : block.type === 'list' ? t.testExecution.blocks.list : t.testExecution.blocks.image}
-                          </span>
-                          <div className="flex items-center gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity">
-                            <button onClick={() => moveBlock(test.id, block.id, 'up')} className="p-0.5 hover:bg-slate-100 rounded text-gray-400"><ChevronUp size={12}/></button>
-                            <button onClick={() => moveBlock(test.id, block.id, 'down')} className="p-0.5 hover:bg-slate-100 rounded text-gray-400"><ChevronDown size={12}/></button>
-                            <button onClick={() => removeBlock(test.id, block.id)} className="p-0.5 hover:bg-red-50 rounded text-red-300 hover:text-red-500 ml-1"><X size={12}/></button>
-                          </div>
-                        </div>
-
-                        {block.type === 'subtopic' && (
-                          <input 
-                            placeholder={t.testExecution.blocks.placeholderSubtopic} 
-                            value={block.content}
-                            onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
-                            className="w-full text-xs font-bold bg-white outline-none border-b border-gray-100 focus:border-indigo-400"
-                          />
-                        )}
-
-                        {block.type === 'step' && (
-                          <textarea 
-                            placeholder={t.testExecution.blocks.placeholderStep} 
-                            value={block.content}
-                            onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
-                            className="w-full text-[11px] p-2 bg-white border border-gray-100 rounded outline-none focus:border-emerald-400 min-h-[60px]"
-                          />
-                        )}
-
-                        {block.type === 'list' && (
-                          <div className="space-y-2">
-                            <div className="flex gap-2 items-center bg-slate-50 p-1 rounded">
-                              <button 
-                                onClick={() => handleBlockChange(test.id, block.id, 'listType', 'bullet')}
-                                className={`p-1 rounded ${block.listType === 'bullet' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-200'}`}
-                              >
-                                <List size={12}/>
-                              </button>
-                              <button 
-                                onClick={() => handleBlockChange(test.id, block.id, 'listType', 'number')}
-                                className={`p-1 rounded ${block.listType === 'number' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-200'}`}
-                              >
-                                <ListOrdered size={12}/>
-                              </button>
-                            </div>
-                            
-                            <div className="space-y-1">
-                              {block.items.map((item, iIndex) => (
-                                <div key={item.id} className="flex gap-2 items-start group/item">
-                                  <span className="text-[10px] text-gray-400 mt-1.5 w-4 text-center font-bold">
-                                    {block.listType === 'number' ? `${iIndex + 1}.` : '•'}
-                                  </span>
-                                  <input 
-                                    placeholder="..." 
-                                    value={item.text}
-                                    onChange={e => handleListItemChange(test.id, block.id, item.id, e.target.value)}
-                                    className="flex-1 text-[11px] p-1 border-b border-transparent focus:border-blue-200 outline-none"
-                                  />
-                                  <button 
-                                    onClick={() => removeListItem(test.id, block.id, item.id)}
-                                    className="opacity-0 group-hover/item:opacity-100 p-1 text-gray-300 hover:text-red-500"
-                                  >
-                                    <X size={10}/>
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                            
-                            <button 
-                              onClick={() => addListItem(test.id, block.id)}
-                              className="w-full py-1 text-[9px] font-bold text-blue-500 border border-dashed border-blue-200 rounded hover:bg-blue-50 transition-colors uppercase"
-                            >
-                              + {t.testExecution.blocks.list}
-                            </button>
-                          </div>
-                        )}
-
-                        {block.type === 'code' && (
-                          <div className="space-y-2">
-                            <input 
-                              placeholder={t.testExecution.blocks.placeholderCodeDesc} 
-                              value={block.description}
-                              onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
-                              className="w-full text-[10px] font-medium text-slate-500 outline-none italic"
-                            />
-                            <textarea 
-                              placeholder={t.testExecution.blocks.placeholderCode} 
-                              value={block.content}
-                              onChange={e => handleBlockChange(test.id, block.id, 'content', e.target.value)}
-                              className="w-full text-[10px] p-2 bg-gray-900 text-emerald-400 font-mono rounded border border-gray-800 outline-none min-h-[100px] h-auto scrollbar-hide"
-                            />
-                          </div>
-                        )}
-
-                        {block.type === 'image' && (
-                          <div 
-                            className="space-y-3 outline-none focus:ring-1 focus:ring-slate-200 rounded-md p-1 -m-1"
-                            tabIndex={0}
-                            title="Você pode clicar aqui e usar Ctrl+V para colar uma imagem"
-                            onPaste={(e) => {
-                              const file = e.clipboardData?.files?.[0];
-                              if (file && file.type.startsWith('image/')) {
-                                handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
-                              }
-                            }}
-                          >
-                            {block.content ? (
-                              <div className="relative group/img overflow-hidden rounded-md border border-slate-200">
-                                <img src={block.content} className="w-full h-32 object-cover" alt="Preview"/>
-                                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer">
-                                  <span className="text-[10px] text-white font-bold uppercase">{t.testExecution.blocks.image}</span>
-                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
-                                </label>
-                              </div>
-                            ) : (
-                              <div 
-                                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-indigo-200 rounded-lg bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-300 transition-colors outline-none cursor-text focus:ring-2 focus:ring-indigo-400/50 group/box"
-                                tabIndex={0}
-                                title="Clique aqui para focar e aperte Ctrl+V para colar"
-                                onPaste={(e) => {
-                                  const file = e.clipboardData?.files?.[0];
-                                  if (file && file.type.startsWith('image/')) {
-                                    handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
-                                  }
-                                }}
-                              >
-                                <ImageIcon size={22} className="text-indigo-300 group-hover/box:text-indigo-500 transition-colors mb-1" />
-                                <span className="text-[10px] font-medium text-slate-500 mb-1">{t.testExecution.blocks.placeholderImage}</span>
-                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-100/70 px-2 py-1 rounded">
-                                  Clique e aperte Ctrl + V
-                                </span>
-                                <label className="mt-3 text-[9px] font-bold text-[#00a335] hover:text-[#008a2d] hover:underline cursor-pointer uppercase tracking-wider">
-                                  Ou procurar arquivo...
-                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} />
-                                </label>
-                              </div>
-                            )}
-                            <input 
-                              placeholder={t.testExecution.blocks.placeholderImage} 
-                              value={block.description}
-                              onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
-                              className="w-full text-[10px] p-1.5 border border-gray-100 rounded focus:border-amber-400 outline-none bg-slate-50/50"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  <DndContext 
+                    sensors={sensors}
+                    collisionDetection={pointerWithin}
+                    onDragEnd={(e) => handleDragEnd(e, test.id)}
+                  >
+                    <SortableContext 
+                      items={test.blocks ? test.blocks.map(b => b.id) : []}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {test.blocks && test.blocks.map((block, bIndex) => (
+                        <SortableBlockItem 
+                          key={block.id}
+                          test={test}
+                          block={block}
+                          handleBlockChange={handleBlockChange}
+                          handleBlockImageUpload={handleBlockImageUpload}
+                          addListItem={addListItem}
+                          removeListItem={removeListItem}
+                          handleListItemChange={handleListItemChange}
+                          moveBlock={moveBlock}
+                          removeBlock={removeBlock}
+                          t={t}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                  
                   {(!test.blocks || test.blocks.length === 0) && (
                     <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
                       <Layout size={24} className="text-slate-200 mb-2" />

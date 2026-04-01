@@ -138,12 +138,12 @@ export const useReportData = () => {
   // Block System Handlers
   const addBlock = (testId, type) => {
     const newBlock = {
-      id: Date.now(),
+      id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: type, // 'step', 'subtopic', 'code', 'image', 'list'
       content: '',
       description: '',
       listType: 'bullet', // 'bullet' or 'number'
-      items: type === 'list' ? [{ id: Date.now(), text: '' }] : []
+      items: type === 'list' ? [{ id: `item-${Date.now()}`, text: '' }] : []
     };
     const currentTest = reportData.tests.find(t => t.id === testId);
     handleTestChange(testId, 'blocks', [...(currentTest.blocks || []), newBlock]);
@@ -215,6 +215,21 @@ export const useReportData = () => {
     handleTestChange(testId, 'blocks', blocks);
   };
 
+  const reorderBlocks = (testId, oldIndex, newIndex) => {
+    setReportData(prev => ({
+      ...prev,
+      tests: prev.tests.map(t => {
+        if (t.id === testId) {
+          const newBlocks = [...t.blocks];
+          const [removed] = newBlocks.splice(oldIndex, 1);
+          newBlocks.splice(newIndex, 0, removed);
+          return { ...t, blocks: newBlocks };
+        }
+        return t;
+      })
+    }));
+  };
+
   return {
     reportData,
     handleInputChange,
@@ -237,6 +252,7 @@ export const useReportData = () => {
     removeListItem,
     handleListItemChange,
     moveBlock,
+    reorderBlocks,
     setReportData
   };
 };

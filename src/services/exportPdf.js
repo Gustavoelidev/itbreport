@@ -31,7 +31,7 @@ export const generatePDF = async (containerElement, title) => {
       // Captura a página individualmente
       const dataUrl = await toPng(page, { 
         quality: 1,
-        pixelRatio: 2,
+        pixelRatio: 3, // Aumentado para maior nitidez
         backgroundColor: '#ffffff',
         width: page.offsetWidth,
         height: page.offsetHeight
@@ -44,7 +44,7 @@ export const generatePDF = async (containerElement, title) => {
       if (i > 0) pdf.addPage();
 
       // Adiciona a imagem da página cobrindo toda a folha A4
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
     }
 
     

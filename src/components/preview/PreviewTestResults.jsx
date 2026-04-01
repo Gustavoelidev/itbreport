@@ -61,26 +61,26 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
 
                 {/* Passo */}
                 {block.type === 'step' && block.content && (
-                  <p className="whitespace-pre-wrap text-gray-700 leading-relaxed pl-1 text-[11px]">
+                  <p className={`whitespace-pre-wrap text-gray-700 leading-relaxed pl-1 text-[11px] ${block.isFragment ? 'mt-0' : 'mt-1'} ${!block.isLastChunk ? 'mb-0' : 'mb-1'}`}>
                     {renderRichText(block.content)}
                   </p>
                 )}
 
                 {/* Lista */}
                 {block.type === 'list' && block.items && block.items.length > 0 && (
-                  <div className="pl-4">
+                  <div className={`pl-4 ${block.isFragment && !block.isFirstChunk ? 'mt-0' : 'mt-1'}`}>
                     {block.listType === 'number' ? (
-                      <ol className="list-decimal space-y-1.5 list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
+                      <ol className="list-decimal list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
                         {block.items.filter(i => i.text && i.text.trim()).map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="mb-1.5">
                             {renderRichText(item.text)}
                           </li>
                         ))}
                       </ol>
                     ) : (
-                      <ul className="list-disc space-y-1.5 list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
+                      <ul className="list-disc list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
                         {block.items.filter(i => i.text && i.text.trim()).map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="mb-1.5">
                             {renderRichText(item.text)}
                           </li>
                         ))}
@@ -89,16 +89,22 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                   </div>
                 )}
 
-                {/* Terminal */}
+                {/* Terminal / Code */}
                 {block.type === 'code' && block.content && (
-                  <div className="mt-2 space-y-1.5">
-                    {block.description && (
-                      <p className="text-[9px] font-bold text-gray-400 uppercase ml-1">
+                  <div className={`${(block.isFragment && !block.isFirstChunk) ? 'mt-0' : 'mt-2'} space-y-1.5`}>
+                    {block.description && block.isFirstChunk && (
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                         ↳ {renderRichText(block.description)}
                       </p>
                     )}
-                    <div className="bg-gray-100 p-4 rounded-sm border border-gray-200 scrollbar-hide">
-                      <pre className="text-[10px] whitespace-pre-wrap break-all m-0 leading-tight" style={{ fontFamily: monoStack }}>
+                    <div className={`bg-[#f8fafc] p-3 border border-slate-200 shadow-sm relative overflow-hidden 
+                      ${!block.isLastChunk ? 'border-b-0 rounded-b-none' : 'rounded-b-md'} 
+                      ${(!block.isFirstChunk) ? 'border-t-0 rounded-t-none' : 'rounded-t-md'}`}>
+                      <div className="absolute top-0 left-0 w-0.5 h-full bg-slate-300"></div>
+                      <pre 
+                        className="text-[11px] whitespace-pre-wrap break-all m-0 leading-snug text-slate-700 font-medium" 
+                        style={{ fontFamily: '"JetBrains Mono", "Cascadia Code", "Consolas", monospace' }}
+                      >
                         {block.content}
                       </pre>
                     </div>
@@ -107,9 +113,9 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
 
                 {/* Imagem */}
                 {block.type === 'image' && block.content && (
-                  <div className="mt-4 space-y-2 flex flex-col items-center">
-                    <div className="border border-slate-200 p-1.5 bg-white shadow-sm inline-block max-w-full">
-                      <img src={block.content} alt="Evidência" className="max-h-[450px] object-contain mx-auto" />
+                  <div className="mt-2 space-y-2 flex flex-col items-center">
+                    <div className="border border-slate-200 p-1 bg-white shadow-sm inline-block max-w-full">
+                      <img src={block.content} alt="Evidência" className="max-h-[420px] object-contain mx-auto" />
                     </div>
                     {block.description && (
                       <p className="text-[10px] italic text-gray-500 text-center max-w-[80%] leading-tight">

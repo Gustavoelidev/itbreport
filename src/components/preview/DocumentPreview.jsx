@@ -8,7 +8,7 @@ const Page = ({ children, t, showHeader = false, reportData, pageNumber }) => {
   
   return (
     <div
-      className="pdf-page bg-white w-[210mm] min-h-[297mm] h-[297mm] shadow-2xl px-[2cm] pt-[2cm] pb-[4cm] flex flex-col relative overflow-hidden text-black mb-8 select-none"
+      className="pdf-page bg-white w-[210mm] min-h-[297mm] h-[297mm] shadow-2xl px-[2cm] pt-[2cm] pb-[2.2cm] flex flex-col relative overflow-hidden text-black mb-8 select-none"
       style={{ fontFamily: calibriStack, lineHeight: '1.4' }}
     >
       {/* Marca d'água técnica */}
@@ -49,11 +49,11 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       const items = Array.from(measurerRef.current.children);
       if (items.length === 0) return;
 
-      // 237mm em CSS/Pixels = ~895px
-      // A primeira página POSSUI O CABEÇALHO (PreviewHeader), que ocupa cerca de 180px-200px.
-      // E tem também o mt-8 (32px). Logo, a página 1 tem bem menos espaço.
-      const PAGE_1_MAX_H = 680;
-      const PAGE_N_MAX_H = 860;
+      // CALIBRAÇÃO DE PIXELS:
+      // Page N total usable = 1122.5px - 75.6px (Top) - 83.2px (Bottom Padding 2.2cm) = 963.7px.
+      // Usamos 950px como limite seguro para a maioria dos navegadores.
+      const PAGE_1_MAX_H = 710;
+      const PAGE_N_MAX_H = 950;
       
       const newPages = [];
       let currentPageItems = [];
@@ -66,8 +66,17 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
         // Define o limite atual dependendo de qual página estamos construindo
         const currentLimit = newPages.length === 0 ? PAGE_1_MAX_H : PAGE_N_MAX_H;
 
-        if (relativeBottom > currentLimit && currentPageItems.length > 0) {
-          // Passou do limite prático, este item inaugura uma nova página
+        // REGRA DE PROTEÇÃO DE CABEÇALHO (ÓRFÃOS):
+        const isTestHeader = item.getAttribute('data-type') === 'test-header';
+        const headerBuffer = isTestHeader ? 180 : 0;
+
+        // REGRA DE INÍCIO DE TESTE (NUNCA NA PÁGINA 1):
+        // Se for o início dos resultados e estivermos na folha 1, forçamos a quebra.
+        const isTestResultsStart = item.getAttribute('data-type') === 'test-results-header';
+        const forcePageBreak = isTestResultsStart && newPages.length === 0 && currentPageItems.length > 0;
+
+        if ((relativeBottom + headerBuffer > currentLimit || forcePageBreak) && currentPageItems.length > 0) {
+          // Passou do limite prático ou forçou quebra, este item inaugura uma nova página
           newPages.push(currentPageItems);
           currentPageItems = [index];
           // Novo topo 100% confiável é o topo deste exato elemento
@@ -146,14 +155,17 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       );
     }
 
-    // 5. Testes (Cada parte do teste agora é um átomo para permitir quebra de página no meio de um teste)
+    // 5. Testes (Inicia sempre na Página 2 ou posterior)
     if (reportData.tests && reportData.tests.length > 0) {
-      atoms.push(<h2 key="test-header" className="text-[12px] font-bold uppercase mb-6 border-b border-gray-300 atom">{t.preview.testResults}</h2>);
+      atoms.push(<h2 key="test-header" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom" data-type="test-results-header">{t.preview.testResults}</h2>);
       
       reportData.tests.forEach((test, idx) => {
+        const testSubAtoms = []; 
+        const remainingBlocksAtoms = []; 
+
         // 5.1 Título do Cenário e Status
-        atoms.push(
-          <div key={`test-head-${test.id}`} className="flex justify-between items-end border-b-2 border-slate-900 pb-1 mt-8 mb-6 atom">
+        testSubAtoms.push(
+          <div key={`test-head-${test.id}`} className="flex justify-between items-end border-b-2 border-slate-900 pb-1 mt-6 mb-4">
             <h4 className="text-[14px] font-black uppercase tracking-tighter">
               {t.testExecution.scenarioLabel} {idx + 1}: {test.scenario || '...'}
             </h4>
@@ -167,8 +179,8 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
 
         // 5.2 Descrição do Cenário
         if (test.description) {
-          atoms.push(
-            <div key={`test-desc-${test.id}`} className="bg-slate-50 p-3 rounded-md border-l-4 border-slate-200 mb-6 atom">
+          testSubAtoms.push(
+            <div key={`test-desc-${test.id}`} className="bg-slate-50 p-2 rounded-md border-l-4 border-slate-200 mb-4">
               <p className="text-[11px] text-gray-600 italic leading-relaxed">
                 <span className="font-bold text-slate-800 not-italic uppercase text-[9px] mr-2">{t.testExecution.objectiveLabel}:</span> 
                 {test.description}
@@ -177,20 +189,108 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
           );
         }
 
-        // 5.3 Blocos Individuais (Passos, Imagens, Código)
+        // 5.3 Fragmentação de Blocos
         if (test.blocks && test.blocks.length > 0) {
           test.blocks.forEach((block, bidx) => {
-            atoms.push(
-              <div key={`test-block-${test.id}-${block.id}`} className="mb-6 atom">
-                <PreviewTestResults tests={[{ ...test, blocks: [block] }]} t={t} onlyBlocks={true} />
-              </div>
-            );
+            if (block.type === 'step' && block.content) {
+              const lines = block.content.split('\n').filter(l => l.trim());
+              lines.forEach((line, lidx) => {
+                const isLastLine = lidx === lines.length - 1;
+                const fragment = (
+                  <div key={`test-block-${test.id}-${block.id}-p-${lidx}`} className={`${isLastLine ? 'mb-4' : 'mb-0'} atom`}>
+                    <PreviewTestResults 
+                      tests={[{ ...test, blocks: [{ 
+                        ...block, 
+                        content: line, 
+                        isFragment: lidx > 0,
+                        isFirstChunk: lidx === 0,
+                        isLastChunk: isLastLine
+                      }] }]} 
+                      t={t} 
+                      onlyBlocks={true} 
+                    />
+                  </div>
+                );
+                if (bidx === 0 && lidx === 0) testSubAtoms.push(fragment);
+                else remainingBlocksAtoms.push(fragment);
+              });
+            } 
+            else if (block.type === 'list' && block.items && block.items.length > 0) {
+              block.items.forEach((item, iidx) => {
+                const isLastItem = iidx === block.items.length - 1;
+                const fragment = (
+                  <div key={`test-block-${test.id}-${block.id}-item-${iidx}`} className={`${isLastItem ? 'mb-4' : 'mb-0'} atom`}>
+                    <PreviewTestResults 
+                      tests={[{ ...test, blocks: [{ 
+                        ...block, 
+                        items: [item], 
+                        isFragment: iidx > 0,
+                        isFirstChunk: iidx === 0,
+                        isLastChunk: isLastItem 
+                      }] }]} 
+                      t={t} 
+                      onlyBlocks={true} 
+                    />
+                  </div>
+                );
+                if (bidx === 0 && iidx === 0) testSubAtoms.push(fragment);
+                else remainingBlocksAtoms.push(fragment);
+              });
+            }
+            else if (block.type === 'code' && block.content) {
+              const lines = block.content.split('\n');
+              const CHUNK_SIZE = 8;
+              for (let i = 0, idx = 0; i < lines.length; i += CHUNK_SIZE, idx++) {
+                const chunk = lines.slice(i, i + CHUNK_SIZE).join('\n');
+                const isFirstChunk = i === 0;
+                const isLastChunk = (i + CHUNK_SIZE) >= lines.length;
+                const fragment = (
+                  <div key={`test-block-${test.id}-${block.id}-code-${idx}`} className={`${isLastChunk ? 'mb-4' : 'mb-0'} atom`}>
+                    <PreviewTestResults 
+                      tests={[{ ...test, blocks: [{ 
+                        ...block, 
+                        content: chunk, 
+                        description: isFirstChunk ? block.description : '',
+                        isFragment: !isFirstChunk,
+                        isFirstChunk: isFirstChunk,
+                        isLastChunk: isLastChunk
+                      }] }]} 
+                      t={t} 
+                      onlyBlocks={true} 
+                    />
+                  </div>
+                );
+                if (bidx === 0 && isFirstChunk) testSubAtoms.push(fragment);
+                else remainingBlocksAtoms.push(fragment);
+              }
+            }
+            else {
+              const fragment = (
+                <div key={`test-block-${test.id}-${block.id}`} className="mb-2 atom">
+                  <PreviewTestResults tests={[{ ...test, blocks: [block] }]} t={t} onlyBlocks={true} />
+                </div>
+              );
+              if (bidx === 0) testSubAtoms.push(fragment);
+              else remainingBlocksAtoms.push(fragment);
+            }
           });
         }
 
-        // 5.4 Resultado Esperado e Obtido
+        // MONTAGEM FINAL DA ESTRUTURA DO TESTE NO PDF
+        if (testSubAtoms.length > 0) {
+          atoms.push(
+            <div key={`test-header-group-${test.id}`} className="atom" data-type="test-header">
+              {testSubAtoms}
+            </div>
+          );
+        }
+
+        remainingBlocksAtoms.forEach(fragment => {
+          atoms.push(fragment);
+        });
+
         atoms.push(
-          <div key={`test-res-${test.id}`} className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100 border-dashed mt-8 mb-12 atom">
+          <div key={`test-res-${test.id}`} className="grid grid-cols-2 gap-8 pt-4 border-t border-slate-100 border-dashed mt-4 mb-8 atom">
             <div className="space-y-1">
               <span className="font-bold block text-[9px] text-gray-400 tracking-widest uppercase">{t.preview.expected}</span>
               <p className="text-[11px] text-gray-700 font-medium">{test.expectedResult || 'N/A'}</p>
@@ -213,10 +313,10 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
 
   return (
     <div ref={ref} className="flex flex-col items-center">
-      {/* Container Invisível para Medição */}
+      {/* Container Invisível para Medição (Sincronizado com os limites da Page) */}
       <div 
         ref={measurerRef} 
-        className="absolute opacity-0 pointer-events-none w-[210mm] px-[2cm] py-[2cm]"
+        className="absolute opacity-0 pointer-events-none w-[210mm] px-[2cm] pt-[2cm] pb-[2.2cm]"
         style={{ zIndex: -100, visibility: 'hidden', height: 'auto' }}
       >
         {allAtoms}
