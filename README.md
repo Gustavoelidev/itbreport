@@ -1,16 +1,54 @@
-# React + Vite
+# QA Report Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## About This Project
 
-Currently, two official plugins are available:
+The QA Report Generator is a web application created to simplify, standardize, and expedite the creation of Quality Assurance test reports. It replaces the traditional, manual process of formatting documents in word processors with a dynamic, highly interactive interface. By using this tool, analysts can focus entirely on describing test scenarios and registering technical evidence, relying on the platform to handle the layout, formatting, and file generation automatically.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+It was developed with the main objective of creating a unified corporate standard for QA reports, reducing the overhead of manual document formatting and enabling rapid, professional exports ready to be shared with corporate teams and stakeholders.
 
-## React Compiler
+## Core Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Dynamic Interactive Editor:** Features a block-based editor allowing users to construct test scenarios using topics, steps, lists, code snippets, and image uploading.
+- **Advanced Drag-and-Drop:** Built-in drag-and-drop system to reorder entire test scenarios or individual items within a scenario in real-time.
+- **Bilingual Support & Auto-Translation:** Supports both Portuguese and English interfaces, equipped with an automated translation engine to convert report contents with one click.
+- **Direct Export Capabilities:** Robust native export mechanics capable of generating high-fidelity PDF documents and formatted DOCX files directly from the browser.
+- **Session Management and Security:** Integrates user profiles and authentication flows to securely manage analyst data and personalize the exported documentation.
 
-## Expanding the ESLint configuration
+## Technology Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The application is built using modern web development standards and a component-driven architecture:
+
+- **Frontend Framework:** React.js
+- **Styling:** Tailwind CSS (utility-first framework for rapid and consistent UI development)
+- **Drag and Drop Engine:** @dnd-kit (used for flexible, accessible, and performant drag-and-drop interactions)
+- **State Management:** React Hooks (custom implementations such as `useReportData` for robust local state handling and persistence)
+- **Build Tool:** Vite
+
+## APIs and External Integrations
+
+This software relies on specific backend services and APIs to enable its full functionality:
+
+1. **Supabase API (Authentication & Database)**
+   Used to handle the application's authentication flow. It secures route access, manages user sessions, and retrieves analyst profile metadata (like name, position, department) from a PostgreSQL database deployed via Supabase to automatically fill report headers.
+
+2. **Translation API Service**
+   An integrated translation layer (managed via `translationService.js`) responsible for providing the auto-translation features. It intercepts text elements from the active state, queries the translation provider, and returns localized content dynamically.
+
+3. **Client-Side Export Libraries**
+   Takes the active DOM references and state objects to generate output files without relying on a dedicated backend formatting server. Uses established JavaScript export libraries wrapped under the `exportPdf.js` and `exportDocx.js` service files to compile the final binary documents.
+
+## Local Setup and Dependencies
+
+To execute the project locally, ensure you have Node.js installed in your environment, then run the following commands:
+
+1. Install all required dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Configure environment variables mapping to the specific Supabase project endpoints and Translation API keys in your local `.env` file for all services to authenticate correctly.

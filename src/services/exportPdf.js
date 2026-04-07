@@ -2,18 +2,24 @@ import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import footerImage from '../assets/Screenshot_13.png';
 
+/**
+ * Gera um documento PDF de múltiplas páginas a partir de um elemento DOM usando html-to-image e jsPDF.
+ * Fatias do container são geradas visualmente ao buscar por classes de página específicas.
+ * 
+ * @param {HTMLElement} containerElement - O elemento DOM raiz contendo os nós `.pdf-page`.
+ * @param {string} title - O nome do arquivo gerado.
+ */
 export const generatePDF = async (containerElement, title) => {
   if (!containerElement) {
-    console.error('Container de preview não encontrado!');
+    console.error('[ExportPDF] Preview container not found.');
     return;
   }
   
-  console.log('--- INICIANDO EXPORTAÇÃO PDF MULTI-PÁGINA ---');
+  console.log('[ExportPDF] Initialzing multi-page export pipeline...');
   try {
-    // Busca todas as div que representam páginas reais
     const pages = containerElement.querySelectorAll('.pdf-page');
     if (pages.length === 0) {
-      console.warn('Nenhuma página detectada. Usando fallback...');
+      console.warn('[ExportPDF] No pages detected. Aborting export.');
       return;
     }
 
@@ -24,11 +30,9 @@ export const generatePDF = async (containerElement, title) => {
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       
-      // Esconde o indicador visual de página "A4 PAGE" que colocamos na web
       const indicator = page.querySelector('.absolute.top-4.right-8');
       if (indicator) indicator.style.display = 'none';
 
-      // Captura a página individualmente
       const dataUrl = await toPng(page, { 
         quality: 1,
         pixelRatio: 2,
@@ -37,21 +41,17 @@ export const generatePDF = async (containerElement, title) => {
         height: page.offsetHeight
       });
 
-      // Restaura o indicador
       if (indicator) indicator.style.display = 'block';
 
-      // Se não for a primeira página, adiciona uma nova folha ao PDF
       if (i > 0) pdf.addPage();
-
-      // Adiciona a imagem da página cobrindo toda a folha A4
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
     }
 
     
-    const fileName = (title || 'relatorio').replace(/\s+/g, '_');
+    const fileName = (title || 'report').replace(/\s+/g, '_');
     pdf.save(`${fileName}.pdf`);
-    console.log(`--- EXPORTAÇÃO CONCLUÍDA (${pages.length} páginas) ---`);
+    console.log(`[ExportPDF] Successfully exported ${pages.length} pages.`);
   } catch (error) { 
-    console.error('ERRO NA EXPORTAÇÃO PDF:', error); 
+    console.error('[ExportPDF] Error rendering PDF:', error); 
   }
 };

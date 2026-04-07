@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { defaultReportState } from '../constants/defaultReportState';
+import { compressImage } from '../lib/imageUtils';
 
+/**
+ * Hook customizado React dedicado ao gerenciamento do estado central do Relatório de QA.
+ * Lida com persistência via window.localStorage e expõe ações atômicas
+ * para manipular testes, infraestrutura e blocos internos de forma segura e imutável.
+ * 
+ * @returns {Object} Estado do relatório e manipuladores de ações associáveis.
+ */
 export const useReportData = () => {
   const [reportData, setReportData] = useState(() => {
     const saved = localStorage.getItem('qa_report_data');
@@ -8,7 +16,14 @@ export const useReportData = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('qa_report_data', JSON.stringify(reportData));
+    try {
+      localStorage.setItem('qa_report_data', JSON.stringify(reportData));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        alert('O armazenamento do navegador está cheio. Tente remover imagens ou limpar dados antigos.');
+      }
+      console.error('Erro ao salvar no localStorage:', e);
+    }
   }, [reportData]);
 
   const handleInputChange = (e, field) => {
@@ -72,7 +87,6 @@ export const useReportData = () => {
     const currentTest = reportData.tests.find(t => t.id === id);
     if (!currentTest) return;
     
-    // Deep clone the test and regenerate all IDs
     const newTest = {
       ...currentTest,
       id: Date.now(),
@@ -105,20 +119,21 @@ export const useReportData = () => {
     });
   };
 
-  const handleImageUpload = (testId, e) => {
+  const handleImageUpload = async (testId, e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      try {
+        const compressed = await compressImage(file);
         const newEvidence = {
           id: Date.now(),
-          url: reader.result,
+          url: compressed,
           description: ''
         };
         const currentTest = reportData.tests.find(t => t.id === testId);
         handleTestChange(testId, 'evidences', [...(currentTest.evidences || []), newEvidence]);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Erro ao processar imagem:', err);
+      }
     }
     e.target.value = '';
   };
@@ -135,16 +150,21 @@ export const useReportData = () => {
     ));
   };
 
-  // Block System Handlers
   const addBlock = (testId, type) => {
     const newBlock = {
       id: Date.now(),
-      type: type, // 'step', 'subtopic', 'code', 'image', 'list'
+      type: type, // 'step', 'subtopic', 'code', 'image', 'list', 'image_grid'
       content: '',
       description: '',
       listType: 'bullet', // 'bullet' or 'number'
-      items: type === 'list' ? [{ id: Date.now(), text: '' }] : []
+      items: (type === 'list' || type === 'image_grid') ? [] : []
     };
+    
+    // Inicializar lista com um item se for tipo list
+    if (type === 'list') {
+      newBlock.items = [{ id: Date.now(), text: '' }];
+    }
+
     const currentTest = reportData.tests.find(t => t.id === testId);
     handleTestChange(testId, 'blocks', [...(currentTest.blocks || []), newBlock]);
   };
@@ -161,16 +181,56 @@ export const useReportData = () => {
     ));
   };
 
-  const handleBlockImageUpload = (testId, blockId, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleBlockChange(testId, blockId, 'content', reader.result);
-      };
-      reader.readAsDataURL(file);
+  const handleBlockImageUpload = async (testId, blockId, e) => {
+    // Suporta input file (e.target.files) ou paste (e.clipboardData.files) ou arquivo direto
+    const file = e.target?.files?.[0] || e.clipboardData?.files?.[0] || e;
+    
+    if (file instanceof File) {
+      try {
+        const compressed = await compressImage(file);
+        handleBlockChange(testId, blockId, 'content', compressed);
+      } catch (err) {
+        console.error('Erro ao processar imagem:', err);
+      }
     }
-    e.target.value = '';
+    if (e.target) e.target.value = '';
+  };
+
+  const handleGridImageUpload = async (testId, blockId, e) => {
+    // Pode vir de um input (e.target.files) ou de um paste (passando o arquivo direto ou evento customizado)
+    const file = e.target?.files?.[0] || e.clipboardData?.files?.[0] || e;
+    
+    if (file instanceof File) {
+      try {
+        const compressed = await compressImage(file);
+        setReportData(prev => ({
+          ...prev,
+          tests: prev.tests.map(t => t.id === testId ? {
+            ...t,
+            blocks: t.blocks.map(b => b.id === blockId ? {
+              ...b,
+              items: [...(b.items || []), { id: Date.now(), content: compressed }]
+            } : b)
+          } : t)
+        }));
+      } catch (err) {
+        console.error('Erro ao processar imagem do grid:', err);
+      }
+    }
+    if (e.target) e.target.value = '';
+  };
+
+  const removeGridImage = (testId, blockId, imageId) => {
+    setReportData(prev => ({
+      ...prev,
+      tests: prev.tests.map(t => t.id === testId ? {
+        ...t,
+        blocks: t.blocks.map(b => b.id === blockId ? {
+          ...b,
+          items: b.items.filter(img => img.id !== imageId)
+        } : b)
+      } : t)
+    }));
   };
 
   const addListItem = (testId, blockId) => {
@@ -233,6 +293,8 @@ export const useReportData = () => {
     removeBlock,
     handleBlockChange,
     handleBlockImageUpload,
+    handleGridImageUpload,
+    removeGridImage,
     addListItem,
     removeListItem,
     handleListItemChange,

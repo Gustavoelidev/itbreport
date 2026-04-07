@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight, Copy } from 'lucide-react';
+import { Plus, Trash2, Code, X, Image as ImageIcon, Type, Layout, List, ChevronUp, ChevronDown, ListOrdered, ChevronRight, Copy, Smartphone } from 'lucide-react';
 
 const TestExecutionForm = ({ 
   reportData, 
@@ -16,6 +16,8 @@ const TestExecutionForm = ({
   removeListItem,
   handleListItemChange,
   moveBlock,
+  handleGridImageUpload,
+  removeGridImage,
   t
 }) => {
   const [collapsedTests, setCollapsedTests] = React.useState({});
@@ -141,6 +143,10 @@ const TestExecutionForm = ({
                   <button onClick={() => addBlock(test.id, 'image')} className="flex items-center gap-1 px-2 py-1 text-[8px] font-bold text-amber-600 hover:bg-amber-100 rounded transition-colors uppercase">
                     <ImageIcon size={12}/> {t.testExecution.blocks.image}
                   </button>
+                  <div className="w-[1px] h-3 bg-slate-200"></div>
+                  <button onClick={() => addBlock(test.id, 'image_grid')} className="flex items-center gap-1 px-2 py-1 text-[8px] font-bold text-pink-600 hover:bg-pink-100 rounded transition-colors uppercase">
+                    <Smartphone size={12}/> {t.testExecution.blocks.imageGrid}
+                  </button>
                 </div>
 
                 <div className="text-[9px] text-gray-400 text-center italic">
@@ -158,13 +164,14 @@ const TestExecutionForm = ({
                           {block.type === 'list' && <List size={8} className="text-blue-500" />}
                           {block.type === 'code' && <Code size={8} className="text-slate-500" />}
                           {block.type === 'image' && <ImageIcon size={8} className="text-amber-500 fill-amber-50" />}
+                          {block.type === 'image_grid' && <Smartphone size={8} className="text-pink-500 fill-pink-50" />}
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[8px] font-bold text-gray-300 uppercase tracking-widest">
-                            {block.type === 'subtopic' ? t.testExecution.blocks.subtopic : block.type === 'step' ? t.testExecution.blocks.step : block.type === 'code' ? t.testExecution.blocks.code : block.type === 'list' ? t.testExecution.blocks.list : t.testExecution.blocks.image}
+                            {block.type === 'subtopic' ? t.testExecution.blocks.subtopic : block.type === 'step' ? t.testExecution.blocks.step : block.type === 'code' ? t.testExecution.blocks.code : block.type === 'list' ? t.testExecution.blocks.list : block.type === 'image_grid' ? t.testExecution.blocks.imageGrid : t.testExecution.blocks.image}
                           </span>
                           <div className="flex items-center gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity">
                             <button onClick={() => moveBlock(test.id, block.id, 'up')} className="p-0.5 hover:bg-slate-100 rounded text-gray-400"><ChevronUp size={12}/></button>
@@ -264,7 +271,7 @@ const TestExecutionForm = ({
                             onPaste={(e) => {
                               const file = e.clipboardData?.files?.[0];
                               if (file && file.type.startsWith('image/')) {
-                                handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+                                handleBlockImageUpload(test.id, block.id, e);
                               }
                             }}
                           >
@@ -284,7 +291,7 @@ const TestExecutionForm = ({
                                 onPaste={(e) => {
                                   const file = e.clipboardData?.files?.[0];
                                   if (file && file.type.startsWith('image/')) {
-                                    handleBlockImageUpload(test.id, block.id, { target: { files: [file], value: '' } });
+                                    handleBlockImageUpload(test.id, block.id, e);
                                   }
                                 }}
                               >
@@ -304,6 +311,56 @@ const TestExecutionForm = ({
                               value={block.description}
                               onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
                               className="w-full text-[10px] p-1.5 border border-gray-100 rounded focus:border-amber-400 outline-none bg-slate-50/50"
+                            />
+                          </div>
+                        )}
+
+                        {block.type === 'image_grid' && (
+                          <div 
+                            className="space-y-3 outline-none focus:ring-1 focus:ring-pink-200 rounded-md p-1 -m-1"
+                            tabIndex={0}
+                            title="Você pode clicar aqui e usar Ctrl+V para adicionar várias imagens"
+                            onPaste={(e) => {
+                              const files = Array.from(e.clipboardData?.files || []);
+                              if (files.length > 0) {
+                                files.forEach(file => {
+                                  if (file.type.startsWith('image/')) {
+                                    handleGridImageUpload(test.id, block.id, file);
+                                  }
+                                });
+                              }
+                            }}
+                          >
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {block.items && block.items.map((img) => (
+                                <div key={img.id} className="relative group/gridimg aspect-[9/16] bg-slate-100 rounded border border-slate-200 overflow-hidden shadow-sm">
+                                  <img src={img.content} className="w-full h-full object-cover" alt="Grid item"/>
+                                  <button 
+                                    onClick={() => removeGridImage(test.id, block.id, img.id)}
+                                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/gridimg:opacity-100 transition-opacity shadow-lg"
+                                    title="Remover imagem"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                              ))}
+                              
+                              <label className="aspect-[9/16] border-2 border-dashed border-pink-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-pink-50 hover:border-pink-300 transition-all group/add">
+                                <Plus size={20} className="text-pink-300 group-hover/add:text-pink-500 transition-colors" />
+                                <span className="text-[8px] font-black text-pink-400 mt-1 uppercase tracking-tighter">Adicionar</span>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*" 
+                                  onChange={(e) => handleGridImageUpload(test.id, block.id, e)} 
+                                />
+                              </label>
+                            </div>
+                            <input 
+                              placeholder={t.testExecution.blocks.placeholderImage} 
+                              value={block.description}
+                              onChange={e => handleBlockChange(test.id, block.id, 'description', e.target.value)}
+                              className="w-full text-[10px] p-1.5 border border-gray-100 rounded focus:border-pink-400 outline-none bg-slate-50/50"
                             />
                           </div>
                         )}

@@ -2,6 +2,13 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Imag
 import intelbrasLogo from '../assets/intelbras-logo.svg';
 import footerImage from '../assets/Screenshot_13.png';
 
+/**
+ * Gera um documento Microsoft Word (.docx) completo de forma nativa utilizando a biblioteca docx.
+ * Constrói tabelas, parágrafos aninhados, cabeçalhos e calcula dimensões dinâmicas de imagens.
+ * 
+ * @param {Object} reportData - Estado global da aplicação de relatório de QA.
+ * @param {Object} t - Dicionário de tradução ativo.
+ */
 const svgToPngBlob = (svgUrl) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -45,7 +52,6 @@ const parseRichText = (text, options = {}) => {
 export const generateDOCX = async (reportData, t) => {
   const children = [];
 
-  // Logo
   try {
     const pngBlob = await svgToPngBlob(intelbrasLogo);
     const logoBuffer = await pngBlob.arrayBuffer();
@@ -59,9 +65,10 @@ export const generateDOCX = async (reportData, t) => {
       children: [new ImageRun({ data: logoBuffer, transformation: { width: logoW, height: logoH } })],
       spacing: { after: 400 }
     }));
-  } catch (e) { console.warn('Erro ao converter logo SVG:', e); }
+  } catch (e) {
+    console.warn('[GenerateDOCX] Failed to parse SVG logo:', e);
+  }
 
-  // Header Info
   children.push(
     new Paragraph({
       children: [new TextRun({ text: (reportData.title || t.identification.title.toUpperCase()).toUpperCase(), bold: true, size: 36, font: "Calibri" })],
@@ -237,15 +244,12 @@ export const generateDOCX = async (reportData, t) => {
             const imgBlob = await imgResponse.blob();
             const imgBuffer = await imgBlob.arrayBuffer();
             
-            // Medição dinâmica para evitar distorção
             const dims = await getImageDimensions(block.content);
             const ratio = dims.width / dims.height;
             
-            // Largura máxima de ~450 pontos para A4 com margens
             let finalWidth = 450;
             let finalHeight = finalWidth / ratio;
             
-            // Se ficar muito alto, limita pela altura
             if (finalHeight > 400) {
               finalHeight = 400;
               finalWidth = finalHeight * ratio;
@@ -263,7 +267,9 @@ export const generateDOCX = async (reportData, t) => {
                 spacing: { after: 200 }
               }));
             }
-          } catch (e) { console.error("Erro no DOCX:", e); }
+          } catch (e) { 
+             console.error("[GenerateDOCX] Error processing block image:", e); 
+          }
         }
       }
     }
@@ -327,7 +333,9 @@ export const generateDOCX = async (reportData, t) => {
       children: [new ImageRun({ data: bufferF, transformation: { width: footerW, height: footerH } })]
     });
     footerConfig = { default: new Footer({ children: [footerContent] }) };
-  } catch (e) { console.warn('Erro Footer:', e); }
+  } catch (e) { 
+    console.warn('[GenerateDOCX] Missing or failed footer setup:', e); 
+  }
 
   let headerConfig = undefined;
   try {
@@ -351,7 +359,9 @@ export const generateDOCX = async (reportData, t) => {
       ]
     });
     headerConfig = { default: new Header({ children: [headerContent] }) };
-  } catch (e) { console.warn('Erro Watermark:', e); }
+  } catch (e) { 
+     console.warn('[GenerateDOCX] Watermark generation skipped:', e); 
+  }
 
   const doc = new Document({ 
     numbering: {

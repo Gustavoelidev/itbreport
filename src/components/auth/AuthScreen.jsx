@@ -5,6 +5,10 @@ import intelbrasLogo from '../../assets/intelbras-logo.svg';
 import IntelbrasModal from '../ui/IntelbrasModal';
 import { Checkbox } from '../ui/animate-checkbox';
 
+/**
+ * Módulo de tela de autenticação auxiliando sessões no Supabase.
+ * Gerencia estado de painel duplo para fluxos de Login e Cadastro com validação de e-mail corporativo.
+ */
 const AuthScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -12,7 +16,6 @@ const AuthScreen = () => {
   const [error, setError] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -82,7 +85,6 @@ const AuthScreen = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-        {/* Logo Section */}
         <div className="flex flex-col items-center mb-10">
           <img src={intelbrasLogo} alt="Intelbras" className="w-40 h-auto" />
         </div>
@@ -90,7 +92,6 @@ const AuthScreen = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <>
-              {/* Full Name / Analista */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-[#bbcad2] group-focus-within:text-[#00a335] transition-colors" />
@@ -105,7 +106,6 @@ const AuthScreen = () => {
                 />
               </div>
 
-              {/* Department */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Building className="h-5 w-5 text-[#bbcad2] group-focus-within:text-[#00a335] transition-colors" />
@@ -120,7 +120,6 @@ const AuthScreen = () => {
                 />
               </div>
 
-              {/* Position / Cargo */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-[#bbcad2] group-focus-within:text-[#00a335] transition-colors" />
@@ -137,7 +136,6 @@ const AuthScreen = () => {
             </>
           )}
 
-          {/* Email */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Mail className="h-5 w-5 text-[#bbcad2] group-focus-within:text-[#00a335] transition-colors" />
@@ -152,7 +150,6 @@ const AuthScreen = () => {
             />
           </div>
 
-          {/* Password */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Lock className="h-5 w-5 text-[#bbcad2] group-focus-within:text-[#00a335] transition-colors" />

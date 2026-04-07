@@ -37,7 +37,7 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
               {/* Descrição Geral */}
               {test.description && (
                 <div className="bg-slate-50 p-3 rounded-md border-l-4 border-slate-200">
-                  <p className="text-gray-600 italic leading-relaxed text-[11px]">
+                  <p className="text-gray-600 italic leading-relaxed text-[11px] whitespace-pre-wrap">
                     <span className="font-bold text-slate-800 not-italic uppercase text-[9px] mr-2">{t.testExecution.objectiveLabel}:</span> 
                     {renderRichText(test.description)}
                   </p>
@@ -109,10 +109,28 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                 {block.type === 'image' && block.content && (
                   <div className="mt-4 space-y-2 flex flex-col items-center">
                     <div className="border border-slate-200 p-1.5 bg-white shadow-sm inline-block max-w-full">
-                      <img src={block.content} alt="Evidência" className="max-h-[450px] object-contain mx-auto" />
+                      <img src={block.content} alt="Evidência" className="max-h-[550px] object-contain mx-auto" />
                     </div>
                     {block.description && (
                       <p className="text-[10px] italic text-gray-500 text-center max-w-[80%] leading-tight">
+                        {t.preview.fig} {renderRichText(block.description)}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Grid de Imagens (Mobile) */}
+                {block.type === 'image_grid' && block.items && block.items.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <div className="flex flex-wrap justify-center gap-6">
+                      {block.items.map((img) => (
+                        <div key={img.id} className="border border-slate-200 p-1 bg-white shadow-sm flex-1 min-w-[30%] max-w-[45%]">
+                          <img src={img.content} alt="Evidência" className="w-full h-auto max-h-[500px] object-contain mx-auto" />
+                        </div>
+                      ))}
+                    </div>
+                    {block.description && (
+                      <p className="text-[10px] italic text-gray-500 text-center mx-auto max-w-[80%] leading-tight">
                         {t.preview.fig} {renderRichText(block.description)}
                       </p>
                     )}
@@ -127,11 +145,11 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
             <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100 border-dashed mt-8">
               <div className="space-y-1">
                 <span className="font-bold block text-[9px] text-gray-400 tracking-widest uppercase">{t.preview.expected}</span>
-                <p className="text-gray-700 font-medium text-[11px]">{renderRichText(test.expectedResult) || 'N/A'}</p>
+                <p className="text-gray-700 font-medium text-[11px] whitespace-pre-wrap">{renderRichText(test.expectedResult) || 'N/A'}</p>
               </div>
               <div className="space-y-1">
                 <span className="font-bold block text-[9px] text-gray-400 tracking-widest uppercase">{t.preview.actual}</span>
-                <p className={`font-medium text-[11px] ${test.status === 'Pass' ? 'text-green-700' : 'text-red-700'}`}>
+                <p className={`font-medium text-[11px] whitespace-pre-wrap ${test.status === 'Pass' ? 'text-green-700' : 'text-red-700'}`}>
                   {renderRichText(test.actualResult) || (test.status === 'Pass' ? 'OK' : 'FAIL')}
                 </p>
               </div>

@@ -26,7 +26,6 @@ const App = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [originalDataPtr, setOriginalDataPtr] = useState(null);
   
-  // Modal State
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -69,8 +68,8 @@ const App = () => {
     }
     setLang(newLang);
   };
+
   useEffect(() => {
-    // Check initial session
     if (localStorage.getItem('temp_auth_user') && !sessionStorage.getItem('session_active')) {
       supabase.auth.signOut().then(() => {
         localStorage.removeItem('temp_auth_user');
@@ -103,7 +102,6 @@ const App = () => {
   const reportStateUtils = useReportData();
   const { reportData, setReportData } = reportStateUtils;
   
-  // Sync profile data with report data when session changes
   useEffect(() => {
     const syncProfile = async () => {
       if (session?.user) {
@@ -122,7 +120,6 @@ const App = () => {
             email: prev.email || session.user.email
           }));
         } else {
-          // Fallback to metadata if profile table isn't ready
           setReportData(prev => ({
             ...prev,
             qaName: prev.qaName || session.user.user_metadata?.full_name,
@@ -181,7 +178,6 @@ const App = () => {
           return res;
         };
 
-        // Processo sequencial com tratamento de limite
         newData.title = await safeTranslate(newData.title);
         newData.qaName = await safeTranslate(newData.qaName);
         newData.role = await safeTranslate(newData.role);
@@ -298,7 +294,6 @@ const App = () => {
     const monthsPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
     const monthsEN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    // Sempre puxa a data de HOJE do sistema
     const today = new Date();
     const formattedPT = `${today.getDate()} de ${monthsPT[today.getMonth()]} de ${today.getFullYear()}`;
     const formattedEN = `${monthsEN[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;

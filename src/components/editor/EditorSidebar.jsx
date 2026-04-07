@@ -81,6 +81,8 @@ const EditorSidebar = (props) => {
             removeBlock={props.removeBlock}
             handleBlockChange={props.handleBlockChange}
             handleBlockImageUpload={props.handleBlockImageUpload}
+            handleGridImageUpload={props.handleGridImageUpload}
+            removeGridImage={props.removeGridImage}
             addListItem={props.addListItem}
             removeListItem={props.removeListItem}
             handleListItemChange={props.handleListItemChange}
