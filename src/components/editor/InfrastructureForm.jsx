@@ -31,9 +31,11 @@ const InfrastructureForm = ({ reportData, handleInfraChange, addInfraItem, remov
                   value={infra.type} 
                   onChange={e => handleInfraChange(infra.id, 'type', e.target.value)}
                 >
+                  <option value="NONE">Nenhum</option>
                   <option value="AP">AP</option>
                   <option value="SWITCH">Switch</option>
                   <option value="ROUTER">Router</option>
+                  <option value="MOBILE">Celular</option>
                   <option value="CLOUD">Cloud / Server</option>
                   <option value="STATION">Station / Client</option>
                 </select>
@@ -49,7 +51,7 @@ const InfrastructureForm = ({ reportData, handleInfraChange, addInfraItem, remov
               </div>
             </div>
 
-            {infra.type !== 'CLOUD' && (
+            {infra.type !== 'CLOUD' && infra.type !== 'NONE' && (
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter px-1">{t.infrastructure.firmware}</label>
                 <input 

@@ -6,6 +6,19 @@ const ChangelogModal = ({ isOpen, onClose, t }) => {
 
   const versions = [
     {
+      version: "1.2.0",
+      date: "Abril 2026",
+      changes: [
+        "Lançamento do Modo de Relatório Público (Publicável) para compartilhamento externo.",
+        "Sanitização automática de dados sensíveis (Nome, Cargo, E-mail) no cabeçalho público.",
+        "Remoção automática da marca d'água 'CONFIDENCIAL' no modo de exportação pública.",
+        "Integração do seletor de tipo de documento diretamente no menu de Templates.",
+        "Melhorias na seção de Infraestrutura: Adição de tipos 'Celular' e 'Nenhum'.",
+        "Interface dinâmica que oculta o campo de Firmware para dispositivos incompatíveis.",
+        "Filtro inteligente de exportação: Itens de infraestrutura 'Nenhum' são ocultados no PDF final."
+      ]
+    },
+    {
       version: "1.1.0",
       date: "Março 2026",
       changes: [

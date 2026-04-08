@@ -9,7 +9,8 @@ export const defaultReportState = {
   objectives: '',
   prerequisites: '',
   infrastructure: [
-    { id: Date.now(), type: 'AP', model: '', firmware: '' }
+    { id: Date.now(), type: 'NONE', model: '', firmware: '' }
   ],
-  tests: []
+  tests: [],
+  isPublic: false
 };

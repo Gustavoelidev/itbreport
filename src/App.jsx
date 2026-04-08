@@ -325,6 +325,8 @@ const App = () => {
         onAutoTranslate={handleAutoTranslateReport}
         isTranslating={isTranslating}
         user={session.user}
+        isPublic={reportData.isPublic}
+        onTogglePublic={(val) => handleInputChange({ target: { value: val } }, 'isPublic')}
       />
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -336,6 +338,7 @@ const App = () => {
             <EditorSidebar 
               {...reportStateUtils} 
               onClearData={handleResetReport} 
+              onApplyTemplate={handleApplyTemplate}
               lang={lang} 
               t={t} 
             />

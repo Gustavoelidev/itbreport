@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { templates } from '../../constants/templates';
 import IdentificationForm from './IdentificationForm';
 import BaseContentForm from './BaseContentForm';
 import InfrastructureForm from './InfrastructureForm';
@@ -101,7 +102,7 @@ const EditorSidebar = (props) => {
             onClick={() => setShowChangelog(true)} 
             className="text-[9px] font-black text-[#00a335] hover:text-white bg-green-50 hover:bg-[#00a335] px-1.5 py-0.5 rounded transition-colors"
           >
-            v1.1.0
+            v1.2.0
           </button>
         </div>
       </div>

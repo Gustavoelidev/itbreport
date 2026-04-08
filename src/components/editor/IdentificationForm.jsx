@@ -3,8 +3,8 @@ import React from 'react';
 const IdentificationForm = ({ reportData, handleInputChange, t }) => {
   return (
     <section className="space-y-4">
-
-      <div className="space-y-3">
+      
+      <div className="space-y-3 pt-2">
         <input
           type="text"
           placeholder={t.identification.title}
@@ -17,25 +17,25 @@ const IdentificationForm = ({ reportData, handleInputChange, t }) => {
             placeholder={t.identification.qaName}
             value={reportData.qaName}
             onChange={e => handleInputChange(e, 'qaName')}
-            className="w-full text-xs p-2 border rounded outline-none"
+            className={`w-full text-xs p-2 border rounded outline-none transition-opacity ${reportData.isPublic ? 'opacity-50 grayscale bg-slate-50 pointer-events-none' : ''}`}
           />
           <input
             placeholder={t.identification.role}
             value={reportData.role}
             onChange={e => handleInputChange(e, 'role')}
-            className="w-full text-xs p-2 border rounded outline-none"
+            className={`w-full text-xs p-2 border rounded outline-none transition-opacity ${reportData.isPublic ? 'opacity-50 grayscale bg-slate-50 pointer-events-none' : ''}`}
           />
           <input
             placeholder={t.identification.department}
             value={reportData.department}
             onChange={e => handleInputChange(e, 'department')}
-            className="w-full text-xs p-2 border rounded outline-none"
+            className={`w-full text-xs p-2 border rounded outline-none transition-opacity ${reportData.isPublic ? 'opacity-50 grayscale bg-slate-50 pointer-events-none' : ''}`}
           />
           <input
             placeholder={t.identification.email}
             value={reportData.email}
             onChange={e => handleInputChange(e, 'email')}
-            className="w-full text-xs p-2 border rounded outline-none"
+            className={`w-full text-xs p-2 border rounded outline-none transition-opacity ${reportData.isPublic ? 'opacity-50 grayscale bg-slate-50 pointer-events-none' : ''}`}
           />
         </div>
       </div>

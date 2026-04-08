@@ -12,6 +12,7 @@ export const translations = {
       baseContent: "Conteúdo Base",
       infrastructure: "Infraestrutura",
       testExecution: "Execução de Testes",
+      templates: "Templates",
       developedBy: "Desenvolvido por Gustavo Henrique Eli - Assistente de desenvolvimento de produtos"
     },
     identification: {
@@ -19,7 +20,10 @@ export const translations = {
       qaName: "Nome do Analista",
       role: "Cargo / Posição",
       department: "Departamento",
-      email: "E-mail de Contato"
+      email: "E-mail de Contato",
+      docType: "Tipo de Documento",
+      internal: "Relatório Interno (Confidencial)",
+      public: "Relatório Público (Publicável)"
     },
     baseContent: {
       introduction: "INTRODUÇÃO",
@@ -95,6 +99,7 @@ export const translations = {
       baseContent: "Base Content",
       infrastructure: "Infrastructure",
       testExecution: "Test Execution",
+      templates: "Templates",
       developedBy: "Developed by Gustavo Henrique Eli - Product Development Assistant"
     },
     identification: {
@@ -102,7 +107,10 @@ export const translations = {
       qaName: "Analyst Name",
       role: "Role / Position",
       department: "Department",
-      email: "Contact Email"
+      email: "Contact Email",
+      docType: "Document Type",
+      internal: "Internal Report (Confidential)",
+      public: "Public Report (Publishable)"
     },
     baseContent: {
       introduction: "INTRODUCTION",

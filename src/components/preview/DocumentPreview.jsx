@@ -12,9 +12,11 @@ const Page = ({ children, t, showHeader = false, reportData, pageNumber }) => {
       style={{ fontFamily: calibriStack, lineHeight: '1.4' }}
     >
       {/* Marca D'água Ténica (Background) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
-        <div className="text-[80px] font-black tracking-[10px] -rotate-45 whitespace-nowrap uppercase">{t.preview.confidential}</div>
-      </div>
+      {!reportData.isPublic && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
+          <div className="text-[80px] font-black tracking-[10px] -rotate-45 whitespace-nowrap uppercase">{t.preview.confidential}</div>
+        </div>
+      )}
 
       <div className="relative z-10 flex-1">
         {showHeader && <PreviewHeader reportData={reportData} t={t} />}
@@ -129,14 +131,15 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       });
     }
 
-    if (reportData.infrastructure && reportData.infrastructure.length > 0) {
+    const activeInfra = reportData.infrastructure?.filter(item => item.type !== 'NONE') || [];
+    if (activeInfra.length > 0) {
       atoms.push(
         <section key="infra" className="mb-8 atom">
           <h2 className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300">{t.preview.infrastructure}</h2>
           <div className="text-[12px] space-y-1">
-            {reportData.infrastructure.map((item, i) => (
+            {activeInfra.map((item, i) => (
               <p key={i}>
-                <span className="font-bold">[{item.type}]</span> {item.model || 'N/A'}
+                <span className="font-bold">[{item.type === 'MOBILE' ? 'Celular' : item.type}]</span> {item.model || 'N/A'}
                 {item.type !== 'CLOUD' && item.firmware ? ` - FW: ${item.firmware}` : ''}
               </p>
             ))}

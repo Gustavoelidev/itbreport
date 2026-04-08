@@ -70,10 +70,11 @@ const Header = ({
           </button>
 
           {showTemplates && (
-            <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-100 rounded-lg shadow-xl z-[100] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="px-3 pb-2 mb-2 border-b border-gray-50">
+            <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-gray-100 rounded-lg shadow-xl z-[100] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="px-3 pb-2 mb-2 border-b border-gray-50 flex justify-between items-center">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.templates.select}</span>
               </div>
+              
               {templates.map(temp => (
                 <button
                   key={temp.id}
@@ -81,10 +82,10 @@ const Header = ({
                     onApplyTemplate(temp.id);
                     setShowTemplates(false);
                   }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-emerald-50 transition-colors group/item"
+                  className="w-full text-left px-4 py-3 hover:bg-emerald-50 transition-colors group/item border-b border-gray-50 last:border-0"
                 >
                   <div className="text-[11px] font-bold text-gray-700 group-hover/item:text-[#00a335] uppercase tracking-tight">{temp.name}</div>
-                  <div className="text-[10px] text-gray-400 line-clamp-1">{temp.description}</div>
+                  <div className="text-[10px] text-gray-400 line-clamp-2 mt-1 leading-relaxed">{temp.description}</div>
                 </button>
               ))}
             </div>
