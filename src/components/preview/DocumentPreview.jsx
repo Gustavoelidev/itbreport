@@ -52,7 +52,11 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       if (!measurerRef.current) return;
 
       const items = Array.from(measurerRef.current.children);
-      if (items.length === 0) return;
+      if (items.length === 0) {
+        setPages([]);
+        setMeasuring(false);
+        return;
+      }
 
       const PAGE_1_MAX_H = 820; // Otimizado para preencher mais a página
       const PAGE_N_MAX_H = 920;
