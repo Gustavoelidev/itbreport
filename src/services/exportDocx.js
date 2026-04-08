@@ -124,26 +124,56 @@ export const generateDOCX = async (reportData, t) => {
     border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "D1D5DB", space: 6 } }
   });
 
-  children.push(createSectionHeader(t.preview.introduction));
-  children.push(...multiLineText(reportData.introduction));
-  children.push(createSectionHeader(t.preview.objectives));
-  children.push(...multiLineText(reportData.objectives));
+  let sectionCounter = 1;
 
-  children.push(createSectionHeader(t.preview.prerequisites));
-  children.push(...multiLineText(reportData.prerequisites));
+  if (reportData.introduction) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.introduction}`));
+    children.push(...multiLineText(reportData.introduction));
+  }
+  
+  if (reportData.objectives) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.objectives}`));
+    children.push(...multiLineText(reportData.objectives));
+  }
 
-  children.push(createSectionHeader(t.preview.infrastructure));
-  reportData.infrastructure.forEach(infra => {
-    children.push(new Paragraph({ 
-      children: [
-        new TextRun({ text: `[${infra.type}] `, bold: true, font: "Calibri", size: 24 }),
-        new TextRun({ text: `${infra.model || 'N/A'} ${infra.type !== 'CLOUD' && infra.firmware ? `- Firmware: ${infra.firmware}` : ''}`, font: "Calibri", size: 24 })
-      ],
-      spacing: { after: 120 }
+  if (reportData.prerequisites) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.prerequisites}`));
+    children.push(...multiLineText(reportData.prerequisites));
+  }
+
+  const activeInfra = reportData.infrastructure?.filter(item => item.type !== 'NONE') || [];
+  if (activeInfra.length > 0) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.infrastructure}`));
+    
+    // Tabela Compacta de Infraestrutura (2 colunas)
+    const tableRows = [];
+    for (let i = 0; i < activeInfra.length; i += 2) {
+      const items = activeInfra.slice(i, i + 2);
+      tableRows.push(new TableRow({
+        children: items.map(infra => new TableCell({
+          width: { size: 50, type: WidthType.PERCENTAGE },
+          borders: noBorder,
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: `[${infra.type === 'MOBILE' ? 'Celular' : infra.type}] `, bold: true, font: "Calibri", size: 18 }),
+                new TextRun({ text: `${infra.model || 'N/A'}${infra.type !== 'CLOUD' && infra.firmware ? ` (FW: ${infra.firmware})` : ''}`, font: "Calibri", size: 18 })
+              ],
+              spacing: { after: 60 }
+            })
+          ]
+        }))
+      }));
+    }
+
+    children.push(new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: noBorder,
+      rows: tableRows
     }));
-  });
+  }
 
-  children.push(createSectionHeader(t.preview.testResults));
+  children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.testResults}`));
   
   const noBorder = {
     top: { style: BorderStyle.NONE, size: 0, color: "auto" },

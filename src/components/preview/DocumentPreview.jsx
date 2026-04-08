@@ -115,23 +115,24 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
    */
   const renderAtoms = (isMeasuring = false) => {
     const atoms = [];
+    let sectionCounter = 1;
 
     if (reportData.introduction) {
-      atoms.push(<h2 key="intro-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{t.preview.introduction}</h2>);
+      atoms.push(<h2 key="intro-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{sectionCounter++}. {t.preview.introduction}</h2>);
       reportData.introduction.split('\n').filter(p => p.trim()).forEach((p, i) => {
         atoms.push(<p key={`intro-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap leading-relaxed mb-4 atom">{p}</p>);
       });
     }
 
     if (reportData.objectives) {
-      atoms.push(<h2 key="obj-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{t.preview.objectives}</h2>);
+      atoms.push(<h2 key="obj-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{sectionCounter++}. {t.preview.objectives}</h2>);
       reportData.objectives.split('\n').filter(p => p.trim()).forEach((p, i) => {
         atoms.push(<p key={`obj-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap leading-relaxed mb-4 atom">{p}</p>);
       });
     }
 
     if (reportData.prerequisites) {
-      atoms.push(<h2 key="pre-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{t.preview.prerequisites}</h2>);
+      atoms.push(<h2 key="pre-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{sectionCounter++}. {t.preview.prerequisites}</h2>);
       reportData.prerequisites.split('\n').filter(p => p.trim()).forEach((p, i) => {
         atoms.push(<p key={`pre-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap leading-relaxed mb-4 atom">{p}</p>);
       });
@@ -141,12 +142,12 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
     if (activeInfra.length > 0) {
       atoms.push(
         <section key="infra" className="mb-8 atom">
-          <h2 className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300">{t.preview.infrastructure}</h2>
-          <div className="text-[12px] space-y-1">
+          <h2 className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300">{sectionCounter++}. {t.preview.infrastructure}</h2>
+          <div className="text-[11px] grid grid-cols-2 gap-x-8 gap-y-1">
             {activeInfra.map((item, i) => (
-              <p key={i}>
-                <span className="font-bold">[{item.type === 'MOBILE' ? 'Celular' : item.type}]</span> {item.model || 'N/A'}
-                {item.type !== 'CLOUD' && item.firmware ? ` - FW: ${item.firmware}` : ''}
+              <p key={i} className="flex gap-2">
+                <span className="font-bold shrink-0">[{item.type === 'MOBILE' ? 'Celular' : item.type}]</span>
+                <span className="truncate">{item.model || 'N/A'}{item.type !== 'CLOUD' && item.firmware ? ` (FW: ${item.firmware})` : ''}</span>
               </p>
             ))}
           </div>
@@ -161,7 +162,7 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
           data-force-break="true" 
           className="text-[12px] font-bold uppercase mb-6 border-b border-gray-300 atom"
         >
-          {t.preview.testResults}
+          {sectionCounter++}. {t.preview.testResults}
         </h2>
       );
       

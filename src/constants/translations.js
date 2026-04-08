@@ -65,11 +65,11 @@ export const translations = {
       }
     },
     preview: {
-      introduction: "1. INTRODUÇÃO",
-      objectives: "2. OBJETIVO",
-      prerequisites: "3. CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)",
-      infrastructure: "4. INFRAESTRUTURA",
-      testResults: "5. RESULTADOS DOS TESTES:",
+      introduction: "INTRODUÇÃO",
+      objectives: "OBJETIVO",
+      prerequisites: "CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)",
+      infrastructure: "INFRAESTRUTURA",
+      testResults: "RESULTADOS DOS TESTES:",
       confidential: "CONFIDENCIAL",
       fig: "Fig.",
       expected: "Resultado Esperado",
@@ -152,11 +152,11 @@ export const translations = {
       }
     },
     preview: {
-      introduction: "1. INTRODUCTION",
-      objectives: "2. OBJECTIVE",
-      prerequisites: "3. ENVIRONMENT SETTINGS (PREREQUISITES)",
-      infrastructure: "4. INFRASTRUCTURE",
-      testResults: "5. TEST RESULTS:",
+      introduction: "INTRODUCTION",
+      objectives: "OBJECTIVE",
+      prerequisites: "ENVIRONMENT SETTINGS (PREREQUISITES)",
+      infrastructure: "INFRASTRUCTURE",
+      testResults: "TEST RESULTS:",
       confidential: "CONFIDENTIAL",
       fig: "Fig.",
       expected: "Expected Result",
