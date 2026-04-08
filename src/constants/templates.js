@@ -12,7 +12,11 @@ export const templates = [
       infrastructure: [
         { id: Date.now(), type: 'NONE', model: '', firmware: '' }
       ],
-      tests: []
+      tests: [],
+      topology: {
+        nodes: {},
+        edges: []
+      }
     }
   },
   {
@@ -28,7 +32,11 @@ export const templates = [
       infrastructure: [
         { id: Date.now(), type: 'NONE', model: '', firmware: '' }
       ],
-      tests: []
+      tests: [],
+      topology: {
+        nodes: {},
+        edges: []
+      }
     }
   }
 ];

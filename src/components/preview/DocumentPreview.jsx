@@ -155,6 +155,98 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       );
     }
 
+    const hasTopology = reportData.topology?.edges?.length > 0 || Object.keys(reportData.topology?.nodes || {}).length > 0;
+    const activeInfraNodes = reportData.infrastructure.filter(i => i.type !== 'NONE');
+
+    if (hasTopology && activeInfraNodes.length > 0) {
+      atoms.push(
+        <section key="topology" className="mb-8 atom">
+          <h2 className="text-[12px] font-bold uppercase mb-4 border-b border-gray-300">{sectionCounter++}. {t.sidebar.topology}</h2>
+          <div className="w-full h-[280px] bg-white border border-slate-100 rounded-xl relative overflow-hidden shadow-sm">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 280" preserveAspectRatio="xMidYMid meet">
+              {/* Edges */}
+              {reportData.topology.edges.map(edge => {
+                const from = reportData.topology.nodes[edge.from];
+                const to = reportData.topology.nodes[edge.to];
+                if (!from || !to) return null;
+                const scaledYFrom = (from.y * 280) / 400;
+                const scaledYTo = (to.y * 280) / 400;
+                return (
+                  <line 
+                    key={edge.id}
+                    x1={from.x} y1={scaledYFrom} 
+                    x2={to.x} y2={scaledYTo} 
+                    stroke="#CBD5E1" 
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+              {/* Nodes */}
+              {activeInfraNodes.map(infra => {
+                const node = reportData.topology.nodes[infra.id];
+                if (!node) return null;
+                const scaledY = (node.y * 280) / 400;
+
+                return (
+                  <g key={infra.id} transform={`translate(${node.x}, ${scaledY})`}>
+                    <rect x="-18" y="-18" width="36" height="36" rx="8" fill="white" stroke="#00a335" strokeWidth="1.5" />
+                    
+                    {/* Icon Symbols */}
+                    {infra.type === 'AP' && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                          <circle cx="12" cy="20" r="2" fill="#00a335" />
+                       </g>
+                    )}
+                    {(infra.type === 'SWITCH' || infra.type === 'NONE') && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <rect x="2" y="2" width="20" height="20" rx="2" />
+                          <path d="M7 8h10M7 12h10M7 16h10" />
+                       </g>
+                    )}
+                    {infra.type === 'ROUTER' && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <rect x="2" y="14" width="20" height="8" rx="2" />
+                          <path d="M6 14v-4M18 14v-4M12 14v-8" />
+                       </g>
+                    )}
+                    {infra.type === 'CLOUD' && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2-1.5-3.5-3.5-4C18 7.5 15.5 5 12.5 5c-2.5 0-4.5 1.5-5 4-2.5.5-4.5 2.5-4.5 5 0 2.5 2 4.5 4.5 4.5" />
+                       </g>
+                    )}
+                    {infra.type === 'STATION' && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <rect x="2" y="3" width="20" height="14" rx="2" />
+                          <path d="M8 21h8M12 17v4" />
+                       </g>
+                    )}
+                    {infra.type === 'MOBILE' && (
+                       <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" strokeWidth="2" strokeLinecap="round">
+                          <rect x="5" y="2" width="14" height="20" rx="2" />
+                          <path d="M12 18h.01" />
+                       </g>
+                    )}
+
+                    <text 
+                      y="32" 
+                      textAnchor="middle" 
+                      fontSize="7" 
+                      className="fill-slate-600 font-bold uppercase tracking-tight"
+                    >
+                      {infra.model || infra.type}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </section>
+      );
+    }
+
     if (reportData.tests && reportData.tests.length > 0) {
       atoms.push(
         <h2 

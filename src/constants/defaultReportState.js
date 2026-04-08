@@ -12,5 +12,9 @@ export const defaultReportState = {
     { id: Date.now(), type: 'NONE', model: '', firmware: '' }
   ],
   tests: [],
+  topology: {
+    nodes: {}, // { [infraId]: { x, y } }
+    edges: []  // [ { id, from, to } ]
+  },
   isPublic: false
 };

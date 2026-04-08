@@ -11,6 +11,7 @@ export const translations = {
       identification: "Identificação",
       baseContent: "Conteúdo Base",
       infrastructure: "Infraestrutura",
+      topology: "Topologia de Rede",
       testExecution: "Execução de Testes",
       templates: "Templates",
       developedBy: "Desenvolvido por Gustavo Henrique Eli - Assistente de desenvolvimento de produtos"
@@ -98,6 +99,7 @@ export const translations = {
       identification: "Identification",
       baseContent: "Base Content",
       infrastructure: "Infrastructure",
+      topology: "Network Topology",
       testExecution: "Test Execution",
       templates: "Templates",
       developedBy: "Developed by Gustavo Henrique Eli - Product Development Assistant"

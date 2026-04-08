@@ -4,6 +4,7 @@ import { templates } from '../../constants/templates';
 import IdentificationForm from './IdentificationForm';
 import BaseContentForm from './BaseContentForm';
 import InfrastructureForm from './InfrastructureForm';
+import TopologyBuilder from './TopologyBuilder';
 import TestExecutionForm from './TestExecutionForm';
 import ChangelogModal from '../ui/ChangelogModal';
 
@@ -60,6 +61,14 @@ const EditorSidebar = (props) => {
             handleInfraChange={props.handleInfraChange} 
             addInfraItem={props.addInfraItem} 
             removeInfraItem={props.removeInfraItem} 
+            t={props.t}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection title={props.t.sidebar.topology}>
+          <TopologyBuilder 
+            reportData={props.reportData} 
+            setReportData={props.setReportData}
             t={props.t}
           />
         </CollapsibleSection>

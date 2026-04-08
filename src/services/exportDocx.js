@@ -173,6 +173,56 @@ export const generateDOCX = async (reportData, t) => {
     }));
   }
 
+  const hasTopology = reportData.topology?.edges?.length > 0 || Object.keys(reportData.topology?.nodes || {}).length > 0;
+  if (hasTopology && activeInfra.length > 0) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.sidebar.topology}`));
+    
+    try {
+      // Gerar SVG da Topologia para conversão (Sincronizado com DocumentPreview)
+      const nodesHtml = activeInfra.map(infra => {
+        const node = reportData.topology.nodes[infra.id];
+        if (!node) return '';
+        const scaledY = (node.y * 280) / 400;
+        
+        let iconPath = '';
+        if (infra.type === 'AP') iconPath = '<path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0" /><circle cx="12" cy="20" r="2" fill="#00a335" />';
+        else if (infra.type === 'SWITCH' || infra.type === 'NONE') iconPath = '<rect x="2" y="2" width="20" height="20" rx="2" /><path d="M7 8h10M7 12h10M7 16h10" />';
+        else if (infra.type === 'ROUTER') iconPath = '<rect x="2" y="14" width="20" height="8" rx="2" /><path d="M6 14v-4M18 14v-4M12 14v-8" />';
+        else if (infra.type === 'CLOUD') iconPath = '<path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2-1.5-3.5-3.5-4C18 7.5 15.5 5 12.5 5c-2.5 0-4.5 1.5-5 4-2.5.5-4.5 2.5-4.5 5 0 2.5 2 4.5 4.5 4.5" />';
+        else if (infra.type === 'STATION') iconPath = '<rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />';
+        else if (infra.type === 'MOBILE') iconPath = '<rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" />';
+
+        return `
+          <g transform="translate(${node.x}, ${scaledY})">
+            <rect x="-18" y="-18" width="36" height="36" rx="8" fill="white" stroke="#00a335" stroke-width="1.5" />
+            <g transform="translate(-10, -10) scale(0.8)" fill="none" stroke="#00a335" stroke-width="2" stroke-linecap="round">
+              ${iconPath}
+            </g>
+            <text y="32" text-anchor="middle" font-size="7" font-family="Calibri" font-weight="bold" fill="#475569">${(infra.model || infra.type).toUpperCase()}</text>
+          </g>`;
+      }).join('');
+
+      const edgesHtml = reportData.topology.edges.map(edge => {
+        const from = reportData.topology.nodes[edge.from];
+        const to = reportData.topology.nodes[edge.to];
+        if (!from || !to) return '';
+        return `<line x1="${from.x}" y1="${(from.y * 280) / 400}" x2="${to.x}" y2="${(to.y * 280) / 400}" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" />`;
+      }).join('');
+
+      const topologySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">${edgesHtml}${nodesHtml}</svg>`;
+      const topologyBlob = await svgToPngBlob('data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(topologySvg))));
+      const topologyBuffer = await topologyBlob.arrayBuffer();
+
+      children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new ImageRun({ data: topologyBuffer, transformation: { width: 450, height: 315 } })],
+        spacing: { before: 200, after: 200 }
+      }));
+    } catch (e) {
+      console.error('[GenerateDOCX] Error rendering topology:', e);
+    }
+  }
+
   children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.testResults}`));
   
   const noBorder = {

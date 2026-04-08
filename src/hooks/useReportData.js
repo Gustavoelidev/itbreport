@@ -12,7 +12,22 @@ import { compressImage } from '../lib/imageUtils';
 export const useReportData = () => {
   const [reportData, setReportData] = useState(() => {
     const saved = localStorage.getItem('qa_report_data');
-    return saved ? JSON.parse(saved) : defaultReportState;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Garante que novas chaves como 'topology' ou 'isPublic' existam
+        return {
+          ...defaultReportState,
+          ...parsed,
+          topology: parsed.topology || defaultReportState.topology,
+          isPublic: parsed.isPublic !== undefined ? parsed.isPublic : defaultReportState.isPublic
+        };
+      } catch (e) {
+        console.error("Erro ao carregar dados do localStorage:", e);
+        return defaultReportState;
+      }
+    }
+    return defaultReportState;
   });
 
   useEffect(() => {
