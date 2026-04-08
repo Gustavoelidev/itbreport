@@ -236,7 +236,10 @@ const App = () => {
       "Limpar Relatório",
       "Atenção: Todos os dados não salvos deste relatório serão descartados. Tem certeza que deseja LIMPAR TUDO?",
       () => {
+        const currentIsPublic = reportData.isPublic;
         const resetState = JSON.parse(JSON.stringify(defaultReportState));
+        resetState.isPublic = currentIsPublic;
+        
         if (session?.user) {
           resetState.qaName = reportData.qaName;
           resetState.role = reportData.role;

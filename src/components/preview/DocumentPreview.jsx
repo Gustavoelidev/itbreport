@@ -87,7 +87,9 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
     };
 
     const resizeObserver = new ResizeObserver(() => {
-      paginate();
+      requestAnimationFrame(() => {
+        paginate();
+      });
     });
 
     if (measurerRef.current) {
