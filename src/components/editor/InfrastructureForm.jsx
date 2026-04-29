@@ -38,6 +38,7 @@ const InfrastructureForm = ({ reportData, handleInfraChange, addInfraItem, remov
                   <option value="MOBILE">Celular</option>
                   <option value="CLOUD">Cloud / Server</option>
                   <option value="STATION">Station / Client</option>
+                  <option value="ACESSORIO">Acessório</option>
                 </select>
               </div>
               <div className="space-y-1">
