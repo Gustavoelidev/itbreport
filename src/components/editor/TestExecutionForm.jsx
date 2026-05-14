@@ -103,16 +103,18 @@ const TestExecutionForm = ({
                   />
                   
                   <div className="flex items-center gap-3">
-                    <select 
-                      className={`text-[10px] p-1 px-2 rounded border outline-none font-bold uppercase ${
-                        test.status === 'Pass' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 border-red-200 bg-red-50'
-                      }`}
-                      value={test.status} 
-                      onChange={e => handleTestChange(test.id, 'status', e.target.value)}
-                    >
-                      <option value="Pass">{t.testExecution.status.pass}</option>
-                      <option value="Fail">{t.testExecution.status.fail}</option>
-                    </select>
+                    {!reportData.isPublic && (
+                      <select 
+                        className={`text-[10px] p-1 px-2 rounded border outline-none font-bold uppercase ${
+                          test.status === 'Pass' ? 'text-green-600 border-green-200 bg-green-50' : 'text-red-600 border-red-200 bg-red-50'
+                        }`}
+                        value={test.status} 
+                        onChange={e => handleTestChange(test.id, 'status', e.target.value)}
+                      >
+                        <option value="Pass">{t.testExecution.status.pass}</option>
+                        <option value="Fail">{t.testExecution.status.fail}</option>
+                      </select>
+                    )}
                     <input 
                       placeholder={t.testExecution.objectiveLabel + "..."} 
                       value={test.description}
@@ -376,26 +378,28 @@ const TestExecutionForm = ({
                 </div>
 
                 {/* RESULTS */}
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{t.testExecution.expectedResult}</label>
-                    <textarea 
-                      placeholder="..." 
-                      value={test.expectedResult} 
-                      onChange={e => handleTestChange(test.id, 'expectedResult', e.target.value)} 
-                      className="w-full text-[11px] p-2 border rounded border-gray-100 h-16 outline-none focus:border-emerald-300" 
-                    />
+                {!reportData.isPublic && (
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{t.testExecution.expectedResult}</label>
+                      <textarea 
+                        placeholder="..." 
+                        value={test.expectedResult} 
+                        onChange={e => handleTestChange(test.id, 'expectedResult', e.target.value)} 
+                        className="w-full text-[11px] p-2 border rounded border-gray-100 h-16 outline-none focus:border-emerald-300" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{t.testExecution.actualResult}</label>
+                      <textarea 
+                        placeholder="..." 
+                        value={test.actualResult} 
+                        onChange={e => handleTestChange(test.id, 'actualResult', e.target.value)} 
+                        className="w-full text-[11px] p-2 border rounded border-gray-100 h-16 outline-none focus:border-red-300" 
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{t.testExecution.actualResult}</label>
-                    <textarea 
-                      placeholder="..." 
-                      value={test.actualResult} 
-                      onChange={e => handleTestChange(test.id, 'actualResult', e.target.value)} 
-                      className="w-full text-[11px] p-2 border rounded border-gray-100 h-16 outline-none focus:border-red-300" 
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>

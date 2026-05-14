@@ -6,11 +6,24 @@ export const defaultReportState = {
   email: '',
   date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
   introduction: '',
+  introductionImages: [],
   objectives: '',
+  objectivesImages: [],
   prerequisites: '',
+  prerequisitesImages: [],
   infrastructure: [
     { id: Date.now(), type: 'NONE', model: '', firmware: '' }
   ],
   tests: [],
-  isPublic: false
+  conclusion: '',
+  conclusionImages: [],
+  isPublic: false,
+  customLabels: {
+    introduction: '',
+    objectives: '',
+    prerequisites: '',
+    infrastructure: '',
+    testResults: '',
+    conclusion: ''
+  }
 };

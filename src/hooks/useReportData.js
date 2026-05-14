@@ -27,7 +27,53 @@ export const useReportData = () => {
   }, [reportData]);
 
   const handleInputChange = (e, field) => {
-    setReportData(prev => ({ ...prev, [field]: e.target.value }));
+    setReportData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
+  const handleCustomLabelChange = (e, field) => {
+    setReportData(prev => ({
+      ...prev,
+      customLabels: {
+        ...(prev.customLabels || {}),
+        [field]: e.target.value
+      }
+    }));
+  };
+
+  const handleBaseImageUpload = async (field, e) => {
+    const file = e.target?.files?.[0] || e.clipboardData?.files?.[0] || e;
+    if (file instanceof File) {
+      try {
+        const compressed = await compressImage(file);
+        const newImage = { id: Date.now(), url: compressed, size: '100%' };
+        setReportData(prev => ({
+          ...prev,
+          [`${field}Images`]: [...(prev[`${field}Images`] || []), newImage]
+        }));
+      } catch (err) {
+        console.error('Erro ao processar imagem base:', err);
+      }
+    }
+    if (e.target) e.target.value = '';
+  };
+
+  const removeBaseImage = (field, imageId) => {
+    setReportData(prev => ({
+      ...prev,
+      [`${field}Images`]: (prev[`${field}Images`] || []).filter(img => img.id !== imageId)
+    }));
+  };
+
+  const resizeBaseImage = (field, imageId, size) => {
+    setReportData(prev => ({
+      ...prev,
+      [`${field}Images`]: (prev[`${field}Images`] || []).map(img => 
+        img.id === imageId ? { ...img, size } : img
+      )
+    }));
   };
 
   const handleInfraChange = (id, field, value) => {
@@ -278,6 +324,10 @@ export const useReportData = () => {
   return {
     reportData,
     handleInputChange,
+    handleCustomLabelChange,
+    handleBaseImageUpload,
+    removeBaseImage,
+    resizeBaseImage,
     handleInfraChange,
     addInfraItem,
     removeInfraItem,

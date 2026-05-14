@@ -6,6 +6,18 @@ const ChangelogModal = ({ isOpen, onClose, t }) => {
 
   const versions = [
     {
+      version: "1.3.0",
+      date: "Maio 2026",
+      changes: [
+        "Correção de paginação: textos agora são quebrados linha a linha, eliminando espaços em branco no PDF.",
+        "Correção de cortes na renderização e exportação do PDF.",
+        "Suporte a múltiplas imagens nos campos base (Introdução, Objetivos, etc.).",
+        "Opções de redimensionamento para imagens base (25%, 50%, 100%).",
+        "Modo Relatório Público: agora permite alterar livremente os títulos das seções.",
+        "Modo Relatório Público: ocultação automática da numeração e dos status de teste (Resultado Esperado/Obtido)."
+      ]
+    },
+    {
       version: "1.2.0",
       date: "Abril 2026",
       changes: [

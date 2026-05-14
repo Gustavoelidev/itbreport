@@ -111,9 +111,7 @@ export const generateDOCX = async (reportData, t) => {
       spacing: { after: isCode ? 0 : 100 },
       ...(isCode && {
           shading: { type: ShadingType.SOLID, color: "F3F4F6", fill: "F3F4F6" },
-          indent: { left: 400, right: 400 },
-          keepNext: idx < lines.length - 1,
-          keepLines: true
+          indent: { left: 400, right: 400 }
       })
     }));
   };
@@ -344,6 +342,11 @@ export const generateDOCX = async (reportData, t) => {
         ]
       })
     );
+  }
+
+  if (reportData.conclusion) {
+    children.push(createSectionHeader(`${sectionCounter++}. ${t.preview.conclusion}`));
+    children.push(...multiLineText(reportData.conclusion));
   }
 
   let footerConfig = undefined;

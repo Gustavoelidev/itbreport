@@ -252,16 +252,22 @@ const App = () => {
     );
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     setIsExporting(true);
-    await generatePDF(previewRef.current, reportData.title);
-    setIsExporting(false);
+    // Aguarda o React atualizar o DOM (removendo os overflow-hidden)
+    // antes de capturar as imagens, evitando o corte da página.
+    setTimeout(async () => {
+      await generatePDF(previewRef.current, reportData.title);
+      setIsExporting(false);
+    }, 500);
   };
 
   const handleExportDOCX = async () => {
     setIsExporting(true);
-    await generateDOCX(reportData, t);
-    setIsExporting(false);
+    setTimeout(async () => {
+      await generateDOCX(reportData, t);
+      setIsExporting(false);
+    }, 100);
   };
 
   const handleExportJSON = () => {
@@ -312,7 +318,7 @@ const App = () => {
   if (!session) return <AuthScreen />;
 
   return (
-    <div className="h-screen bg-[#f3f4f6] flex flex-col font-sans text-slate-800 overflow-hidden">
+    <div className={`bg-[#f3f4f6] flex flex-col font-sans text-slate-800 ${isExporting ? 'min-h-screen' : 'h-screen overflow-hidden'}`}>
       <Header 
         onExportDOCX={handleExportDOCX} 
         onExportPDF={handleExportPDF} 
@@ -332,10 +338,10 @@ const App = () => {
         onTogglePublic={(val) => handleInputChange({ target: { value: val } }, 'isPublic')}
       />
 
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex relative ${isExporting ? '' : 'overflow-hidden'}`}>
         <div 
-          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out overflow-hidden flex-shrink-0 z-20"
-          style={{ width: sidebarWidth }}
+          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out flex-shrink-0 z-20"
+          style={{ width: sidebarWidth, overflow: isExporting ? 'visible' : 'hidden' }}
         >
           <div className="w-full md:w-[420px] h-full overflow-y-auto">
             <EditorSidebar 
@@ -348,7 +354,7 @@ const App = () => {
           </div>
         </div>
 
-        <main className={`flex-1 bg-slate-300 overflow-y-auto ${isMobile && sidebarOpen ? 'hidden' : 'p-4 md:p-12 flex'} flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out`}>
+        <main className={`flex-1 bg-slate-300 flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out ${isMobile && sidebarOpen ? 'hidden' : 'flex'} ${isExporting ? 'overflow-visible py-12' : 'overflow-y-auto p-4 md:p-12'}`}>
           <div className="w-full flex flex-col items-center pdf-pages-container">
             <DocumentPreview ref={previewRef} reportData={reportData} lang={lang} t={t} />
           </div>

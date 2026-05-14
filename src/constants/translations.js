@@ -28,7 +28,8 @@ export const translations = {
     baseContent: {
       introduction: "INTRODUÇÃO",
       objectives: "OBJETIVOS",
-      prerequisites: "Configuração de ambiente (pre requisitos)"
+      prerequisites: "Configuração de ambiente (pre requisitos)",
+      conclusion: "CONCLUSÃO"
     },
     infrastructure: {
       type: "Tipo",
@@ -70,6 +71,7 @@ export const translations = {
       prerequisites: "CONFIGURAÇÕES DE AMBIENTE (PRÉ-REQUISITOS)",
       infrastructure: "INFRAESTRUTURA",
       testResults: "RESULTADOS DOS TESTES:",
+      conclusion: "CONCLUSÃO",
       confidential: "CONFIDENCIAL",
       fig: "Fig.",
       expected: "Resultado Esperado",
@@ -115,7 +117,8 @@ export const translations = {
     baseContent: {
       introduction: "INTRODUCTION",
       objectives: "OBJECTIVES",
-      prerequisites: "PREREQUISITES / ENVIRONMENT"
+      prerequisites: "PREREQUISITES / ENVIRONMENT",
+      conclusion: "CONCLUSION"
     },
     infrastructure: {
       type: "Type",
@@ -157,6 +160,7 @@ export const translations = {
       prerequisites: "ENVIRONMENT SETTINGS (PREREQUISITES)",
       infrastructure: "INFRASTRUCTURE",
       testResults: "TEST RESULTS:",
+      conclusion: "CONCLUSION",
       confidential: "CONFIDENTIAL",
       fig: "Fig.",
       expected: "Expected Result",

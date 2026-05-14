@@ -61,7 +61,7 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
 
                 {/* Passo */}
                 {block.type === 'step' && block.content && (
-                  <p className="whitespace-pre-wrap text-gray-700 leading-relaxed pl-1 text-[11px]">
+                  <p className="whitespace-pre-wrap break-all text-gray-700 leading-relaxed pl-1 text-[11px]">
                     {renderRichText(block.content)}
                   </p>
                 )}
@@ -72,7 +72,7 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                     {block.listType === 'number' ? (
                       <ol className="list-decimal space-y-1.5 list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
                         {block.items.filter(i => i.text && i.text.trim()).map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="break-all">
                             {renderRichText(item.text)}
                           </li>
                         ))}
@@ -80,7 +80,7 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                     ) : (
                       <ul className="list-disc space-y-1.5 list-outside text-gray-700 pl-1 leading-relaxed text-[11px]">
                         {block.items.filter(i => i.text && i.text.trim()).map((item) => (
-                          <li key={item.id}>
+                          <li key={item.id} className="break-all">
                             {renderRichText(item.text)}
                           </li>
                         ))}

@@ -30,6 +30,11 @@ export const generatePDF = async (containerElement, title) => {
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       
+      // Rola a página para a área visível antes de capturar
+      // Isso evita o bug do html-to-image de cortar textos que estão fora do viewport do navegador
+      page.scrollIntoView({ behavior: 'instant', block: 'start' });
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       const indicator = page.querySelector('.absolute.top-4.right-8');
       if (indicator) indicator.style.display = 'none';
 
