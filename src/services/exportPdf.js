@@ -35,8 +35,8 @@ export const generatePDF = async (containerElement, title) => {
       page.scrollIntoView({ behavior: 'instant', block: 'start' });
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      const indicator = page.querySelector('.absolute.top-4.right-8');
-      if (indicator) indicator.style.display = 'none';
+      const originalBoxShadow = page.style.boxShadow;
+      page.style.boxShadow = 'none';
 
       const dataUrl = await toPng(page, { 
         quality: 1,
@@ -46,7 +46,7 @@ export const generatePDF = async (containerElement, title) => {
         height: page.offsetHeight
       });
 
-      if (indicator) indicator.style.display = 'block';
+      page.style.boxShadow = originalBoxShadow;
 
       if (i > 0) pdf.addPage();
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');

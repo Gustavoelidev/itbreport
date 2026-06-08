@@ -11,6 +11,8 @@ export const defaultReportState = {
   objectivesImages: [],
   prerequisites: '',
   prerequisitesImages: [],
+  topology: '',
+  topologyImages: [],
   infrastructure: [
     { id: Date.now(), type: 'NONE', model: '', firmware: '' }
   ],

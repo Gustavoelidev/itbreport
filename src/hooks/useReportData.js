@@ -196,14 +196,16 @@ export const useReportData = () => {
     ));
   };
 
-  const addBlock = (testId, type) => {
+  const addBlock = (testId, type, insertAfterBlockId = null) => {
     const newBlock = {
       id: Date.now(),
-      type: type, // 'step', 'subtopic', 'code', 'image', 'list', 'image_grid'
+      type: type, // 'step', 'subtopic', 'subtitle', 'code', 'image', 'list', 'image_grid', 'spacer'
       content: '',
       description: '',
       listType: 'bullet', // 'bullet' or 'number'
-      items: (type === 'list' || type === 'image_grid') ? [] : []
+      items: (type === 'list' || type === 'image_grid') ? [] : [],
+      spacerType: type === 'spacer' ? 'vertical' : undefined,
+      spacerHeight: type === 'spacer' ? 'medium' : undefined
     };
     
     // Inicializar lista com um item se for tipo list
@@ -212,7 +214,18 @@ export const useReportData = () => {
     }
 
     const currentTest = reportData.tests.find(t => t.id === testId);
-    handleTestChange(testId, 'blocks', [...(currentTest.blocks || []), newBlock]);
+    const blocks = currentTest.blocks || [];
+    let newBlocks;
+    
+    if (insertAfterBlockId) {
+      const idx = blocks.findIndex(b => b.id === insertAfterBlockId);
+      newBlocks = [...blocks];
+      newBlocks.splice(idx + 1, 0, newBlock);
+    } else {
+      newBlocks = [...blocks, newBlock];
+    }
+    
+    handleTestChange(testId, 'blocks', newBlocks);
   };
 
   const removeBlock = (testId, blockId) => {

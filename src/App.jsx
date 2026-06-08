@@ -252,13 +252,17 @@ const App = () => {
     );
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExporting(true);
-    // Aguarda o React atualizar o DOM (removendo os overflow-hidden)
-    // antes de capturar as imagens, evitando o corte da página.
+    // Aguarda o React atualizar o DOM
     setTimeout(async () => {
-      await generatePDF(previewRef.current, reportData.title);
-      setIsExporting(false);
+      try {
+        await generatePDF(previewRef.current, reportData.title);
+      } catch (err) {
+        console.error("Falha ao exportar PDF:", err);
+      } finally {
+        setIsExporting(false);
+      }
     }, 500);
   };
 
@@ -340,7 +344,7 @@ const App = () => {
 
       <div className={`flex-1 flex relative ${isExporting ? '' : 'overflow-hidden'}`}>
         <div 
-          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out flex-shrink-0 z-20"
+          className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out flex-shrink-0 z-20 print:hidden"
           style={{ width: sidebarWidth, overflow: isExporting ? 'visible' : 'hidden' }}
         >
           <div className="w-full md:w-[420px] h-full overflow-y-auto">

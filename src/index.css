@@ -139,3 +139,64 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@media print {
+  /* Esconde a barra de rolagem e reseta o background do body */
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Esconde completamente os elementos de UI (Header, Sidebar, Modais) para que não ocupem espaço */
+  header, 
+  .intelbras-modal-overlay {
+    display: none !important;
+  }
+
+  /* Remove posições relativas dos contêineres pais que poderiam deslocar o conteúdo */
+  div, main {
+    position: static !important;
+  }
+
+  /* Ajusta o main para não ter paddings ou backgrounds que atrapalhem na impressão */
+  main {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  /* Configura o contêiner das páginas */
+  .pdf-pages-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ajusta a página A4 para impressão */
+  .pdf-page {
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: hidden !important;
+  }
+
+  .pdf-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
+

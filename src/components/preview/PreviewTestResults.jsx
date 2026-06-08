@@ -59,6 +59,15 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                   </div>
                 )}
 
+                {/* Subtítulo */}
+                {block.type === 'subtitle' && block.content && (
+                  <div className="mt-3 mb-1">
+                     <h6 className="text-[10px] font-bold text-slate-600 tracking-wide">
+                      {renderRichText(block.content)}
+                    </h6>
+                  </div>
+                )}
+
                 {/* Passo */}
                 {block.type === 'step' && block.content && (
                   <p className="whitespace-pre-wrap break-all text-gray-700 leading-relaxed pl-1 text-[11px]">
@@ -119,6 +128,15 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                   </div>
                 )}
 
+                {/* Topologia */}
+                {block.type === 'topology' && block.content && (
+                  <div className="mt-4 flex flex-col items-center">
+                    <div className="border border-slate-200 p-1.5 bg-white shadow-sm inline-block max-w-full">
+                      <img src={block.content} alt="Topologia do Cenário" className="max-h-[550px] object-contain mx-auto" />
+                    </div>
+                  </div>
+                )}
+
                 {/* Grid de Imagens (Mobile) */}
                 {block.type === 'image_grid' && block.items && block.items.length > 0 && (
                   <div className="mt-4 space-y-3">
@@ -135,6 +153,21 @@ const PreviewTestResults = ({ tests, t, onlyBlocks = false }) => {
                       </p>
                     )}
                   </div>
+                )}
+
+                {/* Espaçador */}
+                {block.type === 'spacer' && (
+                  <div 
+                    style={{ 
+                      height: block.spacerType === 'page_break' 
+                        ? '0px' 
+                        : block.spacerHeight === 'small' 
+                          ? '20px' 
+                          : block.spacerHeight === 'large' 
+                            ? '80px' 
+                            : '40px' 
+                    }}
+                  />
                 )}
               </div>
             ))}

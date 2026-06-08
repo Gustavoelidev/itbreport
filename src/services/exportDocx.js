@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, ShadingType, BorderStyle, Footer, Table, TableRow, TableCell, WidthType, Header, HorizontalPositionAlign, VerticalPositionAlign, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, TextWrappingType } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, ShadingType, BorderStyle, Footer, Table, TableRow, TableCell, WidthType, Header, HorizontalPositionAlign, VerticalPositionAlign, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, TextWrappingType, PageBreak } from "docx";
 import intelbrasLogo from '../assets/intelbras-logo.svg';
 import footerImage from '../assets/Screenshot_13.png';
 
@@ -229,13 +229,20 @@ export const generateDOCX = async (reportData, t) => {
 
     if (test.blocks && test.blocks.length > 0) {
       for (const block of test.blocks) {
-        if (!block.content && block.type !== 'image' && block.type !== 'list') continue;
+        if (!block.content && block.type !== 'image' && block.type !== 'list' && block.type !== 'spacer') continue;
 
         if (block.type === 'subtopic') {
           children.push(new Paragraph({ 
             children: parseRichText(block.content.toUpperCase(), { bold: true, size: 20, font: "Calibri", color: "1F2937" }),
             spacing: { before: 300, after: 100 },
             border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "F3F4F6", space: 1 } }
+          }));
+        }
+
+        if (block.type === 'subtitle') {
+          children.push(new Paragraph({ 
+            children: parseRichText(block.content, { bold: true, size: 18, font: "Calibri", color: "4B5563" }),
+            spacing: { before: 200, after: 80 }
           }));
         }
 
@@ -297,6 +304,17 @@ export const generateDOCX = async (reportData, t) => {
             }
           } catch (e) { 
              console.error("[GenerateDOCX] Error processing block image:", e); 
+          }
+        }
+
+        if (block.type === 'spacer') {
+          if (block.spacerType === 'page_break') {
+            children.push(new Paragraph({ children: [new PageBreak()] }));
+          } else {
+            const twips = block.spacerHeight === 'small' ? 240 : block.spacerHeight === 'large' ? 960 : 480;
+            children.push(new Paragraph({
+              spacing: { before: twips }
+            }));
           }
         }
       }

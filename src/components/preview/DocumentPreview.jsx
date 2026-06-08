@@ -235,6 +235,16 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
       renderBaseImages(reportData.prerequisitesImages);
     }
 
+    if (reportData.topology || (reportData.topologyImages && reportData.topologyImages.length > 0)) {
+      atoms.push(<h2 key="topo-h" className="text-[12px] font-bold uppercase mb-2 border-b border-gray-300 atom">{getSectionHeader('topology', t.preview.topology || 'Topologia')}</h2>);
+      if (reportData.topology) {
+        chunkText(reportData.topology, 600).forEach((chunk, i) => {
+          atoms.push(<p key={`topo-p-${i}`} className="text-[12px] text-justify whitespace-pre-wrap break-words leading-relaxed mb-4 atom">{renderRichText(chunk) || ' '}</p>);
+        });
+      }
+      renderBaseImages(reportData.topologyImages);
+    }
+
     const activeInfra = reportData.infrastructure?.filter(item => item.type !== 'NONE') || [];
     if (activeInfra.length > 0) {
       atoms.push(
@@ -330,6 +340,22 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
                   </div>
                 );
               });
+            } else if (block.type === 'spacer') {
+              const isPageBreak = block.spacerType === 'page_break';
+              const heightMap = {
+                small: '20px',
+                medium: '40px',
+                large: '80px'
+              };
+              const height = isPageBreak ? '0px' : (heightMap[block.spacerHeight] || '40px');
+              atoms.push(
+                <div 
+                  key={`test-block-${test.id}-${block.id}`} 
+                  data-force-break={isPageBreak ? "true" : "false"}
+                  className="atom"
+                  style={{ height }}
+                />
+              );
             } else {
               atoms.push(
                 <div key={`test-block-${test.id}-${block.id}`} className="mb-6 atom">

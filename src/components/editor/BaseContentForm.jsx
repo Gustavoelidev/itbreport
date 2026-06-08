@@ -1,9 +1,11 @@
-import React from 'react';
-import { Eraser, Image as ImageIcon, X, Maximize2, Minimize2, MoveHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eraser, Image as ImageIcon, X, Maximize2, Minimize2, MoveHorizontal, Network } from 'lucide-react';
+import TopologyModal from './TopologyModal';
 
 const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChange, handleBaseImageUpload, removeBaseImage, resizeBaseImage, onClearData, t }) => {
-  
-  const renderField = (fieldId, defaultLabel) => {
+  const [isTopologyModalOpen, setIsTopologyModalOpen] = useState(false);
+
+  const renderField = (fieldId, defaultLabel, isTopology = false) => {
     const isPublic = reportData.isPublic;
     const value = reportData[fieldId] || '';
     const images = reportData[`${fieldId}Images`] || [];
@@ -11,17 +13,28 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
 
     return (
       <div className="space-y-2 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-        {isPublic ? (
-          <input 
-            type="text"
-            placeholder={defaultLabel}
-            value={customLabel}
-            onChange={(e) => handleCustomLabelChange(e, fieldId)}
-            className="w-full text-[10px] font-black text-gray-500 uppercase tracking-tighter outline-none border-b border-transparent focus:border-indigo-300 placeholder:text-gray-300 bg-transparent"
-          />
-        ) : (
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{defaultLabel}</label>
-        )}
+        <div className="flex items-center justify-between">
+          {isPublic ? (
+            <input 
+              type="text"
+              placeholder={defaultLabel}
+              value={customLabel}
+              onChange={(e) => handleCustomLabelChange(e, fieldId)}
+              className="w-full text-[10px] font-black text-gray-500 uppercase tracking-tighter outline-none border-b border-transparent focus:border-indigo-300 placeholder:text-gray-300 bg-transparent"
+            />
+          ) : (
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{defaultLabel}</label>
+          )}
+
+          {isTopology && (
+            <button 
+              onClick={() => setIsTopologyModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1 bg-[#00a335] text-white rounded text-[9px] font-bold uppercase tracking-widest hover:bg-[#008a2d] transition-colors"
+            >
+              <Network size={12} /> Designer
+            </button>
+          )}
+        </div>
         
         <textarea 
           value={value} 
@@ -98,6 +111,7 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
     <section className="space-y-4">
       {renderField('introduction', t.baseContent.introduction)}
       {renderField('objectives', t.baseContent.objectives)}
+      {renderField('topology', t.preview?.topology || 'Topologia', true)}
       {renderField('prerequisites', t.baseContent.prerequisites)}
       {renderField('conclusion', t.baseContent.conclusion)}
 
@@ -109,6 +123,12 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
           <Eraser size={14} /> Limpar Dados do Relatório
         </button>
       </div>
+
+      <TopologyModal 
+        isOpen={isTopologyModalOpen} 
+        onClose={() => setIsTopologyModalOpen(false)} 
+        onSaveImage={({ file }) => handleBaseImageUpload('topology', file)}
+      />
     </section>
   );
 };
