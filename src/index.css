@@ -141,33 +141,42 @@ body {
 }
 
 @media print {
-  /* Esconde a barra de rolagem e reseta o background do body */
-  body {
+  html, body {
     background-color: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Esconde completamente os elementos de UI (Header, Sidebar, Modais) para que não ocupem espaço */
-  header, 
+  header,
   .intelbras-modal-overlay {
     display: none !important;
   }
 
-  /* Remove posições relativas dos contêineres pais que poderiam deslocar o conteúdo */
-  div, main {
+  /* Resetar layout dos wrappers externos sem afetar elementos filhos posicionados */
+  body > div,
+  body > div > div {
     position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
   }
 
-  /* Ajusta o main para não ter paddings ou backgrounds que atrapalhem na impressão */
   main {
     background: white !important;
     padding: 0 !important;
     margin: 0 !important;
     display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
-  /* Configura o contêiner das páginas */
   .pdf-pages-container {
     display: block !important;
     width: 100% !important;
@@ -175,8 +184,25 @@ body {
     padding: 0 !important;
   }
 
-  /* Ajusta a página A4 para impressão */
+  /* Watermark oculta no PDF — evita camada de texto que bloqueia seleção */
+  .pdf-watermark {
+    display: none !important;
+  }
+
+  /* Qualquer position:relative/absolute com z-index numérico cria stacking context
+     → Chrome gera GPU compositing layer → rasteriza tudo como imagem no PDF.
+     Zerando z-index em TODOS os descendentes elimina os stacking contexts. */
+  .pdf-page * {
+    z-index: auto !important;
+  }
+
+  /* pdf-content-area: position:static remove o flex item do fluxo posicionado */
+  .pdf-content-area {
+    position: static !important;
+  }
+
   .pdf-page {
+    position: relative !important;
     margin: 0 auto !important;
     box-shadow: none !important;
     page-break-after: always;
@@ -186,7 +212,7 @@ body {
     min-height: 297mm !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .pdf-page:last-child {

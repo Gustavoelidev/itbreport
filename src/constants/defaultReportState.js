@@ -13,6 +13,7 @@ export const defaultReportState = {
   prerequisitesImages: [],
   topology: '',
   topologyImages: [],
+  topologyEditorData: null,
   infrastructure: [
     { id: Date.now(), type: 'NONE', model: '', firmware: '' }
   ],

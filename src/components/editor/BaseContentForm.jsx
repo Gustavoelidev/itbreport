@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eraser, Image as ImageIcon, X, Maximize2, Minimize2, MoveHorizontal, Network } from 'lucide-react';
 import TopologyModal from './TopologyModal';
 
-const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChange, handleBaseImageUpload, removeBaseImage, resizeBaseImage, onClearData, t }) => {
+const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChange, handleBaseImageUpload, handleTopologyUpdate, removeBaseImage, resizeBaseImage, onClearData, t }) => {
   const [isTopologyModalOpen, setIsTopologyModalOpen] = useState(false);
 
   const renderField = (fieldId, defaultLabel, isTopology = false) => {
@@ -27,19 +27,24 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
           )}
 
           {isTopology && (
-            <button 
+            <button
               onClick={() => setIsTopologyModalOpen(true)}
               className="flex items-center gap-1.5 px-2 py-1 bg-[#00a335] text-white rounded text-[9px] font-bold uppercase tracking-widest hover:bg-[#008a2d] transition-colors"
             >
-              <Network size={12} /> Designer
+              <Network size={12} /> {reportData.topologyEditorData ? 'Editar Topologia' : 'Designer'}
             </button>
           )}
         </div>
         
-        <textarea 
-          value={value} 
-          onChange={e => handleInputChange(e, fieldId)} 
-          className="w-full text-xs p-2 border rounded border-gray-100 h-24 outline-none focus:border-[#00a335]" 
+        <textarea
+          value={value}
+          onChange={e => handleInputChange(e, fieldId)}
+          onPaste={(e) => {
+            const files = Array.from(e.clipboardData?.files || []);
+            const img = files.find(f => f.type.startsWith('image/'));
+            if (img) { e.preventDefault(); handleBaseImageUpload(fieldId, img); }
+          }}
+          className="w-full text-xs p-2 border rounded border-gray-100 h-24 outline-none focus:border-[#00a335]"
         />
 
         {/* Upload de Imagens Base */}
@@ -94,7 +99,7 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
             <div className="flex items-center gap-2">
               <ImageIcon size={14} className="text-gray-400 group-hover/add:text-gray-600" />
               <span className="text-[10px] font-bold text-gray-400 group-hover/add:text-gray-600 uppercase tracking-widest">
-                Adicionar Imagem
+                Adicionar Imagem <span className="normal-case font-normal opacity-60">ou Ctrl+V</span>
               </span>
             </div>
             <input type="file" multiple className="hidden" accept="image/*" onChange={(e) => {
@@ -124,10 +129,11 @@ const BaseContentForm = ({ reportData, handleInputChange, handleCustomLabelChang
         </button>
       </div>
 
-      <TopologyModal 
-        isOpen={isTopologyModalOpen} 
-        onClose={() => setIsTopologyModalOpen(false)} 
-        onSaveImage={({ file }) => handleBaseImageUpload('topology', file)}
+      <TopologyModal
+        isOpen={isTopologyModalOpen}
+        onClose={() => setIsTopologyModalOpen(false)}
+        initialData={reportData.topologyEditorData}
+        onSaveImage={({ file, nodes, edges }) => handleTopologyUpdate(file, nodes, edges)}
       />
     </section>
   );

@@ -21,6 +21,7 @@ const App = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lang, setLang] = useState('pt');
+  const [zoom, setZoom] = useState(100);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -252,18 +253,8 @@ const App = () => {
     );
   };
 
-  const handleExportPDF = async () => {
-    setIsExporting(true);
-    // Aguarda o React atualizar o DOM
-    setTimeout(async () => {
-      try {
-        await generatePDF(previewRef.current, reportData.title);
-      } catch (err) {
-        console.error("Falha ao exportar PDF:", err);
-      } finally {
-        setIsExporting(false);
-      }
-    }, 500);
+  const handleExportPDF = () => {
+    generatePDF(reportData.title);
   };
 
   const handleExportDOCX = async () => {
@@ -303,20 +294,6 @@ const App = () => {
     reader.readAsText(file);
   };
 
-  useEffect(() => {
-    const monthsPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    const monthsEN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-    const today = new Date();
-    const formattedPT = `${today.getDate()} de ${monthsPT[today.getMonth()]} de ${today.getFullYear()}`;
-    const formattedEN = `${monthsEN[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
-
-    const newDate = lang === 'pt' ? formattedPT : formattedEN;
-
-    if (newDate !== reportData.date) {
-      setReportData(prev => ({ ...prev, date: newDate }));
-    }
-  }, [lang, setReportData]);
 
   if (authLoading) return <SplashScreen />;
   if (!session) return <AuthScreen />;
@@ -342,7 +319,7 @@ const App = () => {
         onTogglePublic={(val) => handleInputChange({ target: { value: val } }, 'isPublic')}
       />
 
-      <div className={`flex-1 flex relative ${isExporting ? '' : 'overflow-hidden'}`}>
+      <div className={`flex-1 flex relative print:block ${isExporting ? '' : 'overflow-hidden'}`}>
         <div 
           className="bg-white border-r border-gray-200 transition-all duration-500 ease-in-out flex-shrink-0 z-20 print:hidden"
           style={{ width: sidebarWidth, overflow: isExporting ? 'visible' : 'hidden' }}
@@ -359,8 +336,26 @@ const App = () => {
         </div>
 
         <main className={`flex-1 bg-slate-300 flex-col items-center scroll-smooth relative z-0 transition-all duration-500 ease-in-out ${isMobile && sidebarOpen ? 'hidden' : 'flex'} ${isExporting ? 'overflow-visible py-12' : 'overflow-y-auto p-4 md:p-12'}`}>
-          <div className="w-full flex flex-col items-center pdf-pages-container">
+          <div
+            className="w-full flex flex-col items-center pdf-pages-container"
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
+          >
             <DocumentPreview ref={previewRef} reportData={reportData} lang={lang} t={t} />
+          </div>
+
+          {/* Controles de Zoom */}
+          <div className="fixed bottom-6 right-6 flex items-center gap-1 bg-white rounded-full shadow-lg border border-gray-200 px-2 py-1 z-50 print:hidden">
+            <button
+              onClick={() => setZoom(z => Math.max(50, z - 10))}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 font-bold text-lg leading-none"
+              title="Diminuir zoom"
+            >−</button>
+            <span className="text-[11px] font-bold text-gray-500 w-10 text-center select-none">{zoom}%</span>
+            <button
+              onClick={() => setZoom(z => Math.min(150, z + 10))}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600 font-bold text-lg leading-none"
+              title="Aumentar zoom"
+            >+</button>
           </div>
         </main>
       </div>

@@ -6,6 +6,21 @@ const ChangelogModal = ({ isOpen, onClose, t }) => {
 
   const versions = [
     {
+      version: "1.4.0",
+      date: "Junho 2026",
+      changes: [
+        "Exportação PDF via window.print(): texto agora é selecionável e copiável no PDF gerado.",
+        "Correção de cabeçalho ausente no PDF (nome do analista, cargo, e-mail e data).",
+        "Controles de zoom no preview (50% a 150%, passo de 10%).",
+        "Campo de data editável na identificação com botão para inserir a data de hoje.",
+        "Suporte a Ctrl+V para colar imagens diretamente nos campos de conteúdo base.",
+        "Designer de Topologia: 4 novos tipos de equipamento (Firewall/UTM, Câmera IP, NVR, Servidor/NAS).",
+        "Designer de Topologia: sistema de tipos de conexão com cores distintas (Ethernet, Fibra, Wireless, Trunk/VLAN).",
+        "Designer de Topologia: exportação recortada no conteúdo — sem espaço vazio ao redor.",
+        "Designer de Topologia: estado de nodes e arestas preservado para reedição sem perda de dados."
+      ]
+    },
+    {
       version: "1.3.0",
       date: "Maio 2026",
       changes: [

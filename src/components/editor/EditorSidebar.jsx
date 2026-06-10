@@ -38,19 +38,21 @@ const EditorSidebar = (props) => {
     <aside className="w-full md:w-[420px] bg-white border-r border-gray-200 h-full flex flex-col z-10 overflow-hidden">
       <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-gray-200">
         <CollapsibleSection title={props.t.sidebar.identification} defaultOpen={true}>
-          <IdentificationForm 
-            reportData={props.reportData} 
-            handleInputChange={props.handleInputChange} 
+          <IdentificationForm
+            reportData={props.reportData}
+            handleInputChange={props.handleInputChange}
             t={props.t}
+            lang={props.lang}
           />
         </CollapsibleSection>
         
         <CollapsibleSection title={props.t.sidebar.baseContent}>
-          <BaseContentForm 
-            reportData={props.reportData} 
-            handleInputChange={props.handleInputChange} 
+          <BaseContentForm
+            reportData={props.reportData}
+            handleInputChange={props.handleInputChange}
             handleCustomLabelChange={props.handleCustomLabelChange}
             handleBaseImageUpload={props.handleBaseImageUpload}
+            handleTopologyUpdate={props.handleTopologyUpdate}
             removeBaseImage={props.removeBaseImage}
             resizeBaseImage={props.resizeBaseImage}
             onClearData={props.onClearData}
@@ -106,7 +108,7 @@ const EditorSidebar = (props) => {
             onClick={() => setShowChangelog(true)} 
             className="text-[9px] font-black text-[#00a335] hover:text-white bg-green-50 hover:bg-[#00a335] px-1.5 py-0.5 rounded transition-colors"
           >
-            v1.3.0
+            v1.4.0
           </button>
         </div>
       </div>

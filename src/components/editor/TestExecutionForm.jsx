@@ -425,11 +425,20 @@ const TestExecutionForm = ({
                           )}
 
                           {block.type === 'image' && (
-                            <div className="space-y-2">
+                            <div
+                              className="space-y-2 outline-none focus:ring-1 focus:ring-amber-200 rounded-md p-1 -m-1"
+                              tabIndex={0}
+                              title="Você pode clicar aqui e usar Ctrl+V para colar uma imagem"
+                              onPaste={(e) => {
+                                const files = Array.from(e.clipboardData?.files || []);
+                                const img = files.find(f => f.type.startsWith('image/'));
+                                if (img) handleBlockImageUpload(test.id, block.id, img);
+                              }}
+                            >
                               {block.content ? (
                                 <div className="relative border rounded p-1 bg-white inline-block max-w-[200px] group/imgblock">
                                   <img src={block.content} className="max-h-24 w-auto object-contain" alt="Evidência"/>
-                                  <button 
+                                  <button
                                     onClick={() => handleBlockChange(test.id, block.id, 'content', '')}
                                     className="absolute -top-1.5 -right-1.5 bg-red-500 text-white p-0.5 rounded-full hover:bg-red-600 shadow-md"
                                   >
@@ -439,12 +448,12 @@ const TestExecutionForm = ({
                               ) : (
                                 <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg py-4 cursor-pointer hover:bg-slate-50 hover:border-amber-400 transition-colors">
                                   <ImageIcon size={20} className="text-slate-400 mb-1" />
-                                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Carregar imagem</span>
-                                  <input 
-                                    type="file" 
-                                    className="hidden" 
-                                    accept="image/*" 
-                                    onChange={(e) => handleBlockImageUpload(test.id, block.id, e)} 
+                                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Carregar ou Ctrl+V</span>
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) => handleBlockImageUpload(test.id, block.id, e)}
                                   />
                                 </label>
                               )}

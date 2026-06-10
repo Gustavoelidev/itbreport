@@ -60,6 +60,21 @@ export const useReportData = () => {
     if (e.target) e.target.value = '';
   };
 
+  const handleTopologyUpdate = async (file, nodes, edges) => {
+    if (!(file instanceof File)) return;
+    try {
+      const compressed = await compressImage(file);
+      const newImage = { id: Date.now(), url: compressed, size: '100%' };
+      setReportData(prev => ({
+        ...prev,
+        topologyImages: [newImage],
+        topologyEditorData: { nodes, edges }
+      }));
+    } catch (err) {
+      console.error('Erro ao processar imagem de topologia:', err);
+    }
+  };
+
   const removeBaseImage = (field, imageId) => {
     setReportData(prev => ({
       ...prev,
@@ -339,6 +354,7 @@ export const useReportData = () => {
     handleInputChange,
     handleCustomLabelChange,
     handleBaseImageUpload,
+    handleTopologyUpdate,
     removeBaseImage,
     resizeBaseImage,
     handleInfraChange,

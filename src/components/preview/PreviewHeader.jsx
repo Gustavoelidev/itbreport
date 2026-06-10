@@ -5,12 +5,12 @@ const PreviewHeader = ({ reportData, t }) => {
   return (
     <>
       {/* Header Logo */}
-      <div className="flex justify-end mb-8 relative z-10">
+      <div className="flex justify-end mb-8">
         <img src={intelbrasLogo} alt="Intelbras" className="h-8 object-contain" />
       </div>
 
       {/* Título e Info QA */}
-      <header className="mb-10 relative z-10">
+      <div className="mb-10">
         <h1 className="text-lg font-bold uppercase tracking-tight border-b-2 border-black pb-2 mb-4">
           {reportData.title || (t ? `[${t.identification.title.toUpperCase()}]` : '[TÍTULO DO RELATÓRIO]')}
         </h1>
@@ -24,7 +24,7 @@ const PreviewHeader = ({ reportData, t }) => {
             <p className="text-gray-400 font-bold pt-4 uppercase text-[9px] tracking-widest inline-block">{reportData.date}</p>
           </div>
         )}
-      </header>
+      </div>
     </>
   );
 };

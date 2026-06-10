@@ -8,17 +8,17 @@ const Page = ({ children, t, showHeader = false, reportData, pageNumber }) => {
   
   return (
     <div
-      className="pdf-page bg-white w-[210mm] min-h-[297mm] h-[297mm] shadow-2xl px-[2cm] pt-[2cm] pb-[2.5cm] flex flex-col relative overflow-hidden text-black mb-8 select-none"
+      className="pdf-page bg-white w-[210mm] min-h-[297mm] h-[297mm] shadow-2xl px-[2cm] pt-[2cm] pb-[2.5cm] flex flex-col relative overflow-hidden text-black mb-8"
       style={{ fontFamily: calibriStack, lineHeight: '1.4' }}
     >
-      {/* Marca D'água Ténica (Background) */}
+      {/* Marca D'água — visível no preview, ocultada no PDF via print CSS */}
       {!reportData.isPublic && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
+        <div className="pdf-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.03 }}>
           <div className="text-[80px] font-black tracking-[10px] -rotate-45 whitespace-nowrap uppercase">{t.preview.confidential}</div>
         </div>
       )}
 
-      <div className="relative z-10 flex-1">
+      <div className="pdf-content-area relative z-10 flex-1">
         {showHeader && <PreviewHeader reportData={reportData} t={t} />}
         <div className={showHeader ? "mt-8" : ""}>
           {children}
@@ -411,9 +411,9 @@ const DocumentPreview = forwardRef(({ reportData, t }, ref) => {
   return (
     <div ref={ref} className="flex flex-col items-center">
       {/* Container Invisível para Medição de Altura */}
-      <div 
-        ref={measurerRef} 
-        className="absolute opacity-0 pointer-events-none w-[210mm] px-[2cm] py-[2cm]"
+      <div
+        ref={measurerRef}
+        className="absolute opacity-0 pointer-events-none w-[210mm] px-[2cm] py-[2cm] print:hidden"
         style={{ zIndex: -100, visibility: 'hidden', height: 'auto' }}
       >
         {allAtoms}
